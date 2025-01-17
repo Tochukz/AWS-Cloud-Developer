@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  The template configures an EC2 instance with a Apache Server installed
+  and customized.
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t3.micro
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Keyname of exisiting KeyPair
+    Default: DevSimpleKey
+Mappings:
+  Images:
+    eu-west-1:
+      Ami: ami-04f87c366aa353bc5
+    eu-west-2:
+      Ami: ami-0fa3603ea544e5bf9
+    eu-west-3:
+      Ami: ami-0f139a4a2cdfff8d1
+Resources:
+  Ec2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SimpleEc2Role
+      Description: Readonly access to AmazonPolly for EC2 instances
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonPollyReadOnlyAccess
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: SimpleEc2Pofile
+      Roles:
+        - Ref: Ec2Role
+  WebSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebSecGroup
+      GroupDescription: Allow HTTP and SSH access from anywhere
+      SecurityGroupIngress:
+        - Description: All HTTP access
+          IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - Description: All SSHS access
+          IpProtocol: TCP
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  CustomServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        Fn::FindInMap:
+          - Images
+          - Ref: AWS::Region
+          - Ami
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      IamInstanceProfile:
+        Ref: InstanceProfile
+      SecurityGroupIds:
+        - Fn::GetAtt:
+            - WebSecGroup
+            - GroupId
+      UserData:
+        Fn::Base64:
+          Fn::ReadFileContents: setup-server.sh
+      Tags:
+        - Key: Name
+          Value: CustomServer
+Outputs:
+  PublicIp:
+    Description: Public IP of the instance
+    Value:
+      Fn::GetAtt:
+        - CustomServer
+        - PublicIp
+  DnsName:
+    Description: The DNS name of the instance
+    Value:
+      Fn::GetAtt:
+        - CustomServer
+        - PublicDnsName
+  InstanceId:
+    Description: The instance Id
+    Value:
+      Ref: CustomServer
