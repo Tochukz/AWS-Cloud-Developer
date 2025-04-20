@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configures an IAM Group and an IAM user with a specific policy
+
+Parameters:
+  DevUser1Password:
+    Type: String
+    Description: Password for the IAM user devuser1
+    NoEcho: true
+    MinLength: 8
+    MaxLength: 128
+
+Resources:
+  DevGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: DevGroup
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess
+      Policies:
+        - PolicyName: DevGroupPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AllowEC2Describe
+                Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                Resource: "*"
+              - Sid: NoDeleteS3Objects
+                Effect: Deny
+                Action:
+                  - s3:DeleteObject
+                Resource: "*"
+
+  DevUser1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: devuser1
+      LoginProfile:
+        Password: !Ref DevUser1Password
+        PasswordResetRequired: false
+      Groups:
+        - !Ref DevGroup
