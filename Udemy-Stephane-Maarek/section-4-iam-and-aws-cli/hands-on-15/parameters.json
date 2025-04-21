@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "ExternalAccountArn",
+    "ParameterValue": "arn-for-external-user"
+  },
+  {
+    "ParameterKey": "StaffUser1Password",
+    "ParameterValue": "your-password"
+  }
+]

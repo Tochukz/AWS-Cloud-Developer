@@ -1,2 +1,9 @@
 .DS_Store
 .vscode
+*.pem
+*.zip
+code_v2025-02-23
+AWS-Certified-Developer-Slides-v40.pdf
+private-*
+secret-*
+events*.json

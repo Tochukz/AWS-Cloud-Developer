@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create a Customer Managed IAM policy with permission to GET/PUT/DELETE object in S3 bucket
+
+Parameters:
+  ExternalAccountArn:
+    Type: String
+    Description: The ARN of the external account to assume the role
+  StaffUser1Password:
+    Type: String
+    Description: Password for staff user 1
+    NoEcho: true
+    MinLength: 8
+    MaxLength: 128
+
+Resources:
+  SimpleBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: simple-bucket-21-04
+
+  StaffGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: StaffGroup
+
+  StaffUser1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: chucks_staff_dev
+      LoginProfile:
+        Password: !Ref StaffUser1Password
+        PasswordResetRequired: true
+
+  UserPasswordPolicy:
+    Type: AWS::IAM::UserPolicy
+    Properties:
+      PolicyName: UserPasswordPolicy
+      UserName: !Ref StaffUser1
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: UserChangeOwnPassword
+            Effect: Allow
+            Action:
+              - iam:ChangePassword
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:user/${StaffUser1}"
+          - Sid: UserAccessPasswordPolicy
+            Effect: Allow
+            Action:
+              - iam:GetAccountPasswordPolicy
+            Resource: "*"
+
+  StaffRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: StaffRole
+      Description: Role to be assumed by an external account
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref ExternalAccountArn
+            Action: sts:AssumeRole
+
+  CustomPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: StaffManagedPolicy
+      Description: Policy for staff developers
+      Roles:
+        - !Ref StaffRole
+      Groups:
+        - !Ref StaffGroup
+      Users:
+        - !Ref StaffUser1
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: CrudS3Object
+            Effect: Allow
+            Action:
+              - S3:PutObject
+              - S3:GetObject
+              - S3:DeleteObject
+            Resource: !Sub "${SimpleBucket.Arn}/uploads/*"
+          - Sid: ListS3Objects
+            Effect: Allow
+            Action:
+              - S3:ListBucket
+            Resource: !GetAtt SimpleBucket.Arn
+          - Sid: ListBuckets
+            Effect: Allow
+            Action:
+              - S3:ListAllMyBuckets
+              - S3:GetBucketLocation
+            Resource: "*"
+
+Outputs:
+  StaffRoleArn:
+    Description: The ARN of the StaffRole
+    Value: !GetAtt StaffRole.Arn
