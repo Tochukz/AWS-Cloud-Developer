@@ -33,7 +33,7 @@ protocol://service-code.region-code.amazonaws.com
 **Other Credentials for IAM Users**  
 You can have _X.509 certificates_, which are used with SOAP APIs, or you can have _GIT credentials_ as either Secure Shell (SSH) keys or passwords to interact with the AWS CodeCommit service.
 
-**Roles**
+**Roles**  
 To control access to an IAM role, define a _trust policy_ that specifies which principals can assume a role.  
 Potential principals include AWS services and also users who have authenticated using _identity federation_.  
 Principals could also include users who authenticate with _web identity federation_,
@@ -45,7 +45,7 @@ These credentials are composed of an access key ID, secret access key, and, addi
 session token with a known expiration date.
 
 **Custom Policies**  
-Write custom policies manually or use tools like the Visual Policy Editor in the AWS Management Console to generate policies more easily.  
+Write custom policies manually or use tools like the _Visual Policy Editor_ in the AWS Management Console to generate policies more easily.  
 To help you test the effects of policies, you can also use the _IAM policy simulator_ at https://policysim.aws.amazon.com.
 
 #### Exercises
@@ -67,6 +67,6 @@ To setup a new profile in AWS CLI
 $ aws configure --profile restricted
 ```
 
-__Review Questions__
+**Review Questions**   
 Questions - Page[85]  
 Answer    - Page[938]
