@@ -49,11 +49,11 @@ $ . ./secret-env.sh
 4. Use the assumed role to access the `simple-bucket-21-04` bucket.
 
 ```bash
-# On the same terminal where the AWS credentials have been exported
+# On the same terminal where the AWS credentials has been exported
 $ aws s3 ls simple-bucket-21-04
 $ aws s3 cp file.txt s3://simple-bucket-21-04/uploads/file.txt
 
-# This should fail because it is not copying file with the uploads prefix
+# This should fail because it is not copying file with the "uploads/" prefix
 $ aws s3 cp file.txt s3://simple-bucket-21-04/file.txt
 ```
 
@@ -66,7 +66,12 @@ $ aws cloudformation describe-stack-events --stack-name IamPolicies > events.jso
 
 Search for _"Resource handler returned message"_ to see the root failure.
 
-**Cleanup**
+**Cleanup**  
+Empty the bucket
+
+```bash
+$ aws s3 rm s3://simple-bucket-21-04 --recursive
+```
 
 To delete the stacks
 
