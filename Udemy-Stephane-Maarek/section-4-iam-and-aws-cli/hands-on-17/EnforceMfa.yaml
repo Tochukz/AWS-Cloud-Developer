@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configures IAM policy to enforce MFA for IAM users
+
+Parameters:
+  JohnPassword:
+    Type: String
+    Description: The password for john24 user
+    NoEcho: true
+
+Resources:
+  MfaRequiredPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: MfaIsRequiredPolicy
+      Description: This policy allows users to manage their own MFA devices and denies all other actions if MFA is not enabled.
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowUsersManageOwnMfa
+            Effect: Allow
+            Action:
+              - iam:ListVirtualMFADevices
+              - iam:EnableMFADevice
+              - iam:DeactivateMFADevice
+              - iam:DeleteVirtualMFADevice
+              - iam:CreateVirtualMFADevice
+              - iam:ListUsers
+              - iam:ListMFADevices
+              - iam:GetUser
+              - iam:ChangePassword
+              - iam:ResyncMFADevice
+            Resource: "*"
+          - Sid: DenyAllExceptMfaActions
+            Effect: Deny
+            NotAction:
+              - iam:ListVirtualMFADevices
+              - iam:EnableMFADevice
+              - iam:DeactivateMFADevice
+              - iam:DeleteVirtualMFADevice
+              - iam:CreateVirtualMFADevice
+              - iam:ListUsers
+              - iam:ListMFADevices
+              - iam:GetUser
+              - iam:ChangePassword
+              - iam:ResyncMFADevice
+            Resource: "*"
+            Condition:
+              BoolIfExists:
+                aws:MultiFactorAuthPresent: false
+
+  UserJohn:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: john24
+      LoginProfile:
+        Password: !Ref JohnPassword
+        PasswordResetRequired: false
+      ManagedPolicyArns:
+        - !Ref MfaRequiredPolicy
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
