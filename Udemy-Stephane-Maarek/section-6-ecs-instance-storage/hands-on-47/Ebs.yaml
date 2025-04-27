@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >
+  This template creates an Amazon EC2 instance and an EBS volume, and attaches the volume to the instance.
+
+Mappings:
+  Images: # Amazon Linux 2023 AMI 64-bit (x86), uefi-preferred
+    eu-west-1:
+      Ami: ami-0720a3ca2735bf2fa
+    eu-west-2:
+      Ami: ami-04ba8620fc44e2264
+    eu-west-3:
+      Ami: ami-0960d166ab83fd695
+
+Resources:
+  EbsVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Size: 2
+      VolumeType: gp2
+      Tags:
+        - Key: Name
+          Value: SimpleVolume
+
+  EcsInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      ImageId: !FindInMap [Images, !Ref AWS::Region, Ami]
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: SimpleInstance
+
+  EbsAttachment:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      Device: /dev/sdh
+      InstanceId: !Ref EcsInstance
+      VolumeId: !Ref EbsVolume
