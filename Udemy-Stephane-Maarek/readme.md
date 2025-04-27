@@ -19,9 +19,10 @@ Section | Title                         | Lessons
 And everything from Section 17 onwards
 
 __Content__  
+
 Section | Title
 --------|-------
 1 | Course Introduction
 2 | Code & Slides Download
 3 | Getting started with AWS
-4 | IAM and AWS CLI 
+4 | IAM and AWS CLI
