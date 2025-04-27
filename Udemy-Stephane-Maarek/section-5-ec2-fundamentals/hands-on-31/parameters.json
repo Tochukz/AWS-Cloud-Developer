@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "SubscriberEmail1",
+    "ParameterValue": "your-subscriber-email-1"
+  },
+  {
+    "ParameterKey": "SubscriberEmail2",
+    "ParameterValue": "your-subscriber-email-2"
+  }
+]

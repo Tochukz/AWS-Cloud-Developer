@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: AWS CloudFormation template to create a budget for an AWS account.
+
+Parameters:
+  SubscriberEmail1:
+    Type: String
+    Description: Email address for budget notification
+  SubscriberEmail2:
+    Type: String
+    Description: Email address for budget notification
+  BudgetAmount:
+    Type: Number
+    Description: Monthly budget limit in USD
+    Default: 5
+
+Resources:
+  Budget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: MonthlyCostBudget
+        BudgetLimit:
+          Amount: !Ref BudgetAmount
+          Unit: USD
+        BudgetType: COST
+        TimeUnit: MONTHLY
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 79.0 # ~80% of budget
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref SubscriberEmail1
+            - SubscriptionType: EMAIL
+              Address: !Ref SubscriberEmail2
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 99.0 # ~100% of budget
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref SubscriberEmail1
+            - SubscriptionType: EMAIL
+              Address: !Ref SubscriberEmail2
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 119.0 # ~120% of budget
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref SubscriberEmail1
+            - SubscriptionType: EMAIL
+              Address: !Ref SubscriberEmail2
