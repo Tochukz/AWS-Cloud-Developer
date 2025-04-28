@@ -1,0 +1,206 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create an EFS file system with and mount it on two EC2 instances in different AZs
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC ID where the EFS file system will be created
+  Subnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: The first subnet ID where the EFS mount target will be created
+  Subnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: The second subnet ID where the EFS mount target will be created
+  Subnet3:
+    Type: AWS::EC2::Subnet::Id
+    Description: The third subnet ID where the EFS mount target will be created
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: The name of an existing EC2 KeyPair to enable SSH access to the instances
+    Default: DevSimpleKey
+  Ec2Ami:
+    Type: AWS::EC2::Image::Id
+    Description: The AMI ID to use for the EC2 instances
+    Default: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit (x86) for eu-west-2
+
+Resources:
+  FileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: DISABLED
+      Encrypted: true
+      PerformanceMode: generalPurpose
+      ThroughputMode: elastic
+      LifecyclePolicies:
+        - TransitionToIA: AFTER_7_DAYS
+        - TransitionToArchive: AFTER_30_DAYS
+        - TransitionToPrimaryStorageClass: AFTER_1_ACCESS
+      # FileSystemPolicy:
+      #   Version: 2012-10-17
+      #   Statement:
+      #     - Effect: "Allow"
+      #       Action:
+      #         - "elasticfilesystem:ClientMount"
+      #       Principal:
+      #         AWS: !GetAtt Ec2Role.Arn
+      FileSystemTags:
+        - Key: Name
+          Value: DemoFileSystem
+
+  Ec2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EfsAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - elasticfilesystem:ClientMount
+                  - elasticfilesystem:ClientWrite
+                  - elasticfilesystem:ClientRootAccess
+                Resource: !GetAtt FileSystem.Arn
+
+  EcsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: EcsSecurityGroup
+      GroupDescription: ECS Security Group
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allow SSH access from anywhere
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  EfsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: EfsSecurityGroup
+      GroupDescription: EFS Security Group
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allows NFS access from EC2 security group
+          IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !GetAtt EcsSecurityGroup.GroupId
+
+  MountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref Subnet1
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  MountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref Subnet2
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  MountTarget3:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref Subnet3
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  # AccessPoint: # @todo return to check this
+  #   Type: AWS::EFS::AccessPoint
+  #   Properties:
+  #     FileSystemId: !Ref FileSystem
+  #     PosixUser:
+  #       Gid: 1000
+  #       Uid: 1000
+  #     RootDirectory:
+  #       CreationInfo:
+  #         OwnerGid: 1000
+  #         OwnerUid: 1000
+  #         Permissions: "750"
+  #       Path: "/testcfn/abc"
+
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref Ec2Role
+
+  Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      ImageId: !Ref Ec2Ami
+      SubnetId: !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref EcsSecurityGroup
+      Tags:
+        - Key: Name
+          Value: DemoInstance1
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y amazon-efs-utils
+          mkdir /mnt/efs
+          # Mount the EFS FileSystem
+          mount -t efs -o tls ${FileSystem}:/ /mnt/efs
+          # Make it Persistent After Reboot
+          echo "${FileSystem}:/ /mnt/efs efs _netdev,tls 0 0" | sudo tee -a /etc/fstab
+          echo "EFS mounted successfully" > /mnt/efs/testfile1.txt
+
+  Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      ImageId: !Ref Ec2Ami
+      SubnetId: !Ref Subnet2
+      SecurityGroupIds:
+        - !Ref EcsSecurityGroup
+      Tags:
+        - Key: Name
+          Value: DemoInstance2
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y amazon-efs-utils
+          mkdir /mnt/efs
+          # Mount the EFS FileSystem
+          mount -t efs -o tls ${FileSystem}:/ /mnt/efs
+          # Make it Persistent After Reboot
+          echo "${FileSystem}:/ /mnt/efs efs _netdev,tls 0 0" | sudo tee -a /etc/fstab
+          echo "EFS mounted successfully" > /mnt/efs/testfile1.txt
+
+Outputs:
+  FileSystemId:
+    Description: ID of the EFS File System
+    Value: !Ref FileSystem
+  FileSystemDNS:
+    Description: DNS name for the EFS File System
+    Value: !Sub "${FileSystem}.efs.${AWS::Region}.amazonaws.com"
+  Instance1PublicIP:
+    Description: Public IP address of the first EC2 instance
+    Value: !GetAtt Instance1.PublicIp
+  Instance2PublicIP:
+    Description: Public IP address of the second EC2 instance
+    Value: !GetAtt Instance2.PublicIp
