@@ -7,3 +7,5 @@ AWS-Certified-Developer-Slides-v40.pdf
 private-*
 secret-*
 events*.json
+from-*.yaml
+from-*.md

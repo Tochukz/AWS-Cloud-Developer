@@ -121,20 +121,6 @@ Resources:
       SecurityGroups:
         - !Ref EfsSecurityGroup
 
-  # AccessPoint: # @todo return to check this
-  #   Type: AWS::EFS::AccessPoint
-  #   Properties:
-  #     FileSystemId: !Ref FileSystem
-  #     PosixUser:
-  #       Gid: 1000
-  #       Uid: 1000
-  #     RootDirectory:
-  #       CreationInfo:
-  #         OwnerGid: 1000
-  #         OwnerUid: 1000
-  #         Permissions: "750"
-  #       Path: "/testcfn/abc"
-
   Ec2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
