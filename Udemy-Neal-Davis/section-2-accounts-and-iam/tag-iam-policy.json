@@ -1,0 +1,16 @@
+{
+  "Sid": "AllowUsersWithDBAdminEqualDepartment",
+  "Effect": "Allows",
+  "Actions": [
+    "rds:RebootDBInstance",
+    "rds:StartDBInstance",
+    "rds:StopDBInstance"
+  ],
+  "Resources": "*",
+  "Condition": {
+    "StringEquals": {
+      "aws:PrincipalTag/Department": "DBAdmin",
+      "rds:db-tag/Environment": "Production"
+    }
+  }
+}

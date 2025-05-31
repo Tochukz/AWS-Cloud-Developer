@@ -26,8 +26,10 @@ Resources:
               - iam:DeleteVirtualMFADevice
               - iam:CreateVirtualMFADevice
               - iam:ListUsers
+              - iam:ListRoles
               - iam:ListMFADevices
               - iam:GetUser
+              - iam:GetRole
               - iam:ChangePassword
               - iam:ResyncMFADevice
             Resource: "*"

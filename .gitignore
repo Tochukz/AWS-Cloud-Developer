@@ -9,3 +9,9 @@ secret-*
 events*.json
 from-*.yaml
 from-*.md
+aws-dva-code-main
+Developer-Associate-Slides.pdf
+Exam-Cram-DVA-C02.pdf
+env.sh
+.env
+output*.json

@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Role to be assumed by any user in the account
+
+Parameters:
+  IamUserNames:
+    Type: CommaDelimitedList
+    Description: List of IAM User Names that can assume the role
+
+Resources:
+  DemoEc2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DemoEc2Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref AWS::AccountId
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+
+  # Allow the specified users to assume the role
+  DemoEc2RolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: DemoEc2RolePolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Resource: !GetAtt DemoEc2Role.Arn
+      Users: !Ref IamUserNames
+
+Outputs:
+  RoleArn:
+    Description: The ARN of the role
+    Value: !GetAtt DemoEc2Role.Arn
