@@ -43,7 +43,7 @@ The user should already have `iam:ListRoles` and `iam:GetRole` permission.
 5. Fillout the form and click on the _Switch Role_ button
 6. Now navigate the the EC2 Console to confirm that you can access all the EC2 operation that the Role permits.
 
-B) Switch role using AWS CLI
+B) Switch role using AWS CLI (using temporary token)
 
 No previous permission is required
 
@@ -77,6 +77,33 @@ You should see the Role's ARN in the result
 
 ```bash
 $ aws ec2 describe-instances
+```
+
+C) Switch role using AWS CLI (using permanent profile)
+
+To avoid having to always generate temporary security credential when you want to switch role, you can create a profile instead
+
+1. Create a profile that references the user that wants to assume the role. In you `~/.aws/config` file add the following
+
+```
+[profile demo-ec2-role] # john profile can assume DemoEc2Role role
+role_arn = arn:aws:iam::123456789:role/DemoEc2Role
+region = eu-west-2
+source_profile = john
+```
+
+This means that the profile `john` can assume the `DemoEc2Role` role.
+
+2. Test the newly created profile
+
+```bash
+$ aws sts get-caller-identity --profile demo-ec2-role
+```
+
+3.  Confirm that you can access the EC2 API operations granted by the Role's attached policy.
+
+```bash
+$ aws ec2 describe-instances --profile demo-ec2-role
 ```
 
 **Debug Errors**  
