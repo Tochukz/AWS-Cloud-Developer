@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name for the CodeUrl
+    Default: chucks-workspace-storage
+  CodePackage:
+    Type: String
+    Description: S3 Key for the code package
+    Default: v0.0.1/lambda-code-05-06.zip
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SimpleLambdaRole
+      Description: Role for Lambda function
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  LambdaFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: SimpleFunc0506
+      Handler: lambda.handler
+      Runtime: nodejs20.x
+      Role: !GetAtt LambdaRole.Arn
+      CodeUri:
+        Bucket: !Ref BucketName
+        Key: !Ref CodePackage
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowMethods: ["*"]
+          AllowOrigins: ["*"]
+      Environment:
+        Variables:
+          NODE_ENV: development
