@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates a Lambda Function
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  SimpleFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunc
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async(event) => {
+            const response = {
+              statusCode: 200,
+              body: JSON.stringify('Hello from Lambda'),
+            };
+
+            return response;
+          };
