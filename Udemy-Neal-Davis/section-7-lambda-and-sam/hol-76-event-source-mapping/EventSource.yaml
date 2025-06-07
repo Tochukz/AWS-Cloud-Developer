@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates Queue Event Source Mapping to Lambda function
+
+Parameters:
+  CodeS3Bucket:
+    Type: String
+    Description: S3 bucket where the Lambda code lives
+    Default: chucks-workspace-storage
+  CodeS3Key:
+    Type: String
+    Description: The S3 key for the Lambda code
+    Default: v0.0.1/event-function.zip
+
+Resources:
+  SourceQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: SimpleSourceQueue
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ProcessingLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+
+  ProcessingFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ProcessingFunc
+      Runtime: python3.9
+      Handler: lambda.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+
+  SourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt SourceQueue.Arn
+      FunctionName: !Ref ProcessingFunc
+      BatchSize: 10
+
+Outputs:
+  QueueUrl:
+    Description: URL of the Queue
+    Value: !GetAtt SourceQueue.QueueUrl

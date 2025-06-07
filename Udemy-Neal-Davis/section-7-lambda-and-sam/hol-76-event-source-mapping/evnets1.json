@@ -1,0 +1,115 @@
+{
+  "StackEvents": [
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "25ab7da0-43db-11f0-92ea-0286de70d613",
+      "StackName": "EventSource",
+      "LogicalResourceId": "EventSource",
+      "PhysicalResourceId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "ResourceType": "AWS::CloudFormation::Stack",
+      "Timestamp": "2025-06-07T20:08:15.730000+00:00",
+      "ResourceStatus": "ROLLBACK_COMPLETE"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "SourceQueue-DELETE_COMPLETE-2025-06-07T20:08:15.417Z",
+      "StackName": "EventSource",
+      "LogicalResourceId": "SourceQueue",
+      "PhysicalResourceId": "",
+      "ResourceType": "AWS::SQS::Queue",
+      "Timestamp": "2025-06-07T20:08:15.417000+00:00",
+      "ResourceStatus": "DELETE_COMPLETE",
+      "ResourceProperties": "{\"QueueName\":\"SimpleSourceQueue\"}"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "LambdaRole-DELETE_COMPLETE-2025-06-07T20:06:03.043Z",
+      "StackName": "EventSource",
+      "LogicalResourceId": "LambdaRole",
+      "PhysicalResourceId": "",
+      "ResourceType": "AWS::IAM::Role",
+      "Timestamp": "2025-06-07T20:06:03.043000+00:00",
+      "ResourceStatus": "DELETE_COMPLETE",
+      "ResourceProperties": "{\"ManagedPolicyArns\":[\"arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole\"],\"RoleName\":\"LambdaRole\",\"AssumeRolePolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}]}}"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "d5846300-43da-11f0-972d-02bdc3fc1d79",
+      "StackName": "EventSource",
+      "LogicalResourceId": "EventSource",
+      "PhysicalResourceId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "ResourceType": "AWS::CloudFormation::Stack",
+      "Timestamp": "2025-06-07T20:06:01.255000+00:00",
+      "ResourceStatus": "ROLLBACK_IN_PROGRESS",
+      "ResourceStatusReason": "The following resource(s) failed to create: [LambdaRole, SourceQueue]. Rollback requested by user."
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "SourceQueue-CREATE_FAILED-2025-06-07T20:06:00.955Z",
+      "StackName": "EventSource",
+      "LogicalResourceId": "SourceQueue",
+      "PhysicalResourceId": "",
+      "ResourceType": "AWS::SQS::Queue",
+      "Timestamp": "2025-06-07T20:06:00.955000+00:00",
+      "ResourceStatus": "CREATE_FAILED",
+      "ResourceStatusReason": "Resource creation cancelled",
+      "ResourceProperties": "{\"QueueName\":\"SimpleSourceQueue\"}"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "LambdaRole-CREATE_FAILED-2025-06-07T20:06:00.674Z",
+      "StackName": "EventSource",
+      "LogicalResourceId": "LambdaRole",
+      "PhysicalResourceId": "",
+      "ResourceType": "AWS::IAM::Role",
+      "Timestamp": "2025-06-07T20:06:00.674000+00:00",
+      "ResourceStatus": "CREATE_FAILED",
+      "ResourceStatusReason": "LambdaRole already exists in stack arn:aws:cloudformation:eu-west-2:314146339647:stack/InvokingFunctions/0590d8d0-43d1-11f0-ad2b-02bd733cf495",
+      "ResourceProperties": "{\"ManagedPolicyArns\":[\"arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole\"],\"RoleName\":\"LambdaRole\",\"AssumeRolePolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}]}}"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "SourceQueue-CREATE_IN_PROGRESS-2025-06-07T20:06:00.435Z",
+      "StackName": "EventSource",
+      "LogicalResourceId": "SourceQueue",
+      "PhysicalResourceId": "",
+      "ResourceType": "AWS::SQS::Queue",
+      "Timestamp": "2025-06-07T20:06:00.435000+00:00",
+      "ResourceStatus": "CREATE_IN_PROGRESS",
+      "ResourceProperties": "{\"QueueName\":\"SimpleSourceQueue\"}"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "LambdaRole-CREATE_IN_PROGRESS-2025-06-07T20:06:00.432Z",
+      "StackName": "EventSource",
+      "LogicalResourceId": "LambdaRole",
+      "PhysicalResourceId": "",
+      "ResourceType": "AWS::IAM::Role",
+      "Timestamp": "2025-06-07T20:06:00.432000+00:00",
+      "ResourceStatus": "CREATE_IN_PROGRESS",
+      "ResourceProperties": "{\"ManagedPolicyArns\":[\"arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole\"],\"RoleName\":\"LambdaRole\",\"AssumeRolePolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}]}}"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "d3d49020-43da-11f0-880f-023e40d4f0ab",
+      "StackName": "EventSource",
+      "LogicalResourceId": "EventSource",
+      "PhysicalResourceId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "ResourceType": "AWS::CloudFormation::Stack",
+      "Timestamp": "2025-06-07T20:05:58.425000+00:00",
+      "ResourceStatus": "CREATE_IN_PROGRESS",
+      "ResourceStatusReason": "User Initiated"
+    },
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "EventId": "d02fa400-43da-11f0-bfd1-02f730f61f07",
+      "StackName": "EventSource",
+      "LogicalResourceId": "EventSource",
+      "PhysicalResourceId": "arn:aws:cloudformation:eu-west-2:314146339647:stack/EventSource/d0301930-43da-11f0-bfd1-02f730f61f07",
+      "ResourceType": "AWS::CloudFormation::Stack",
+      "Timestamp": "2025-06-07T20:05:52.392000+00:00",
+      "ResourceStatus": "REVIEW_IN_PROGRESS",
+      "ResourceStatusReason": "User Initiated"
+    }
+  ]
+}
