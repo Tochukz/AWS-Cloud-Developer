@@ -1,0 +1,18 @@
+{
+  "resource": "/api/login",
+  "path": "/api/login",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "queryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "resourcePath": "/api/login",
+    "httpMethod": "POST",
+    "stage": "$default"
+  },
+  "body": "{\"username\": \"peter-user\", \"password\": \"peter-pass\"}",
+  "isBase64Encoded": false
+}

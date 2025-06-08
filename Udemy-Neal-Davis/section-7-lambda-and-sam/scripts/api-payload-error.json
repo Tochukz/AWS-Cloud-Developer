@@ -1,0 +1,18 @@
+{
+  "resource": "/api/error-pages",
+  "path": "/api/error-pages",
+  "httpMethod": "GET",
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer <json-token>"
+  },
+  "queryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "resourcePath": "/api/error-pages",
+    "httpMethod": "GET",
+    "stage": "$default"
+  },
+  "isBase64Encoded": false
+}
