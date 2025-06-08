@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Lambda Version and Alias
+
+Parameters:
+  Version1:
+    Type: Number
+    Description: The version number of the first version
+  Version2:
+    Type: Number
+    Description: The version number of the second version
+
+Resources:
+  SimpleAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      Name: simple-alias
+      Description: Split the invocation requests between two version 1 and 2.
+      FunctionName: !ImportValue LambdaVersion-FunctionName
+      FunctionVersion: !Ref Version2
+      RoutingConfig:
+        AdditionalVersionWeights:
+          - FunctionVersion: !Ref Version1
+            FunctionWeight: 0.5 # 50% of the traffic
+Outputs:
+  AliasArn:
+    Description: The ARN of the Alias
+    Value: !Ref SimpleAlias

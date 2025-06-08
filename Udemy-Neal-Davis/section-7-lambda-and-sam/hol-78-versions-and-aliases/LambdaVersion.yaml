@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Lambda Version and Alias
+
+Parameters:
+  LambdaMessage:
+    Type: String
+    Description: A message string for the Lambda content
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SimpleFuncRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  SimpleFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunc
+      Runtime: nodejs20.x
+      Handler: index.hander
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.hander = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify("${LambdaMessage}")
+            }
+          }
+
+  FirstVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      Description: The first version of the function
+      FunctionName: !Ref SimpleFunc
+
+Outputs:
+  FunctionName:
+    Description: The name of the Lambda function
+    Value: !Ref SimpleFunc
+    Export:
+      Name: LambdaVersion-FunctionName

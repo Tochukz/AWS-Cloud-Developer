@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "LambdaMessage",
+    "ParameterValue": "Latest version code"
+  },
+  {
+    "ParameterKey": "Version1",
+    "ParameterValue": "1"
+  },
+  {
+    "ParameterKey": "Version2",
+    "ParameterValue": "2"
+  }
+]
