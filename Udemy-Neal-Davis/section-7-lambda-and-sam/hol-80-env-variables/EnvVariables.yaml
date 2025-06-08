@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Lambda function with Environment Variables
+
+Parameters:
+  AdminUser:
+    Type: String
+    Description: This must be the IAM Username of the IAM user used to deploy this template
+  EncryptedDbPass:
+    Type: String
+    Description: The DB Password that have been encrypted using the KMS key
+
+Resources:
+  SimpleFuncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SimpleFuncRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  SimpleKey:
+    Type: AWS::KMS::Key
+    Properties:
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: Enable IAM User Permission
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: Allow access to Key Administrators
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:user/${AdminUser}
+            Action:
+              - kms:Create
+              - kms:Describe*
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:TagResource
+              - kms:UntagResource
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
+              - kms:RotateKeyOnDemand
+            Resource: "*"
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt SimpleFuncRole.Arn
+                - !Sub arn:aws:iam::${AWS::AccountId}:user/${AdminUser}
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: "*"
+          - Sid: Allow attachment of persistent resources
+            Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt SimpleFuncRole.Arn
+                - !Sub arn:aws:iam::${AWS::AccountId}:user/${AdminUser}
+            Action:
+              - kms:CreateGrant
+              - kms:ListGrants
+              - kms:RevokeGrant
+            Resource: "*"
+            Condition:
+              Bool:
+                kms:GrantIsForAWSResource: true
+
+  SimpleKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/simple-key
+      TargetKeyId: !Ref SimpleKey
+
+  SimpleFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunc
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt SimpleFuncRole.Arn
+      KmsKeyArn: !GetAtt SimpleKey.Arn
+      Environment:
+        Variables:
+          DB_HOST: my-fake-database
+          DB_USER: fake-chucks
+          DB_PASS: !Ref EncryptedDbPass
+      Code:
+        ZipFile: |
+          import json
+          import os
+          import boto3
+          from base64 import b64decode
+
+          def handler(event, context):
+              DB_HOST = os.environ["DB_HOST"]
+              DB_USER = os.environ["DB_USER"]
+              DB_PASS = os.environ["DB_PASS"]
+              ENCRYPTED = os.environ['DB_PASS']
+              DECRYPTED = boto3.client('kms').decrypt(
+              CiphertextBlob=b64decode(ENCRYPTED),
+              EncryptionContext={'LambdaFunctionName': os.environ['AWS_LAMBDA_FUNCTION_NAME']}
+          )['Plaintext'].decode('utf-8')
+              print("Connected to %s as %s with %s" % (DB_HOST, DB_USER, DB_PASS))
+              print(DECRYPTED)
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Hello from Lambda!')
+              }

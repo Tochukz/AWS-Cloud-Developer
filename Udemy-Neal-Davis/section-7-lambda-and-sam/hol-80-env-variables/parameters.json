@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "AdminUser",
+    "ParameterValue": "adminuser"
+  },
+  {
+    "ParameterKey": "EncryptedDbPass",
+    "ParameterValue": "asjlsalkslakslas"
+  }
+]
