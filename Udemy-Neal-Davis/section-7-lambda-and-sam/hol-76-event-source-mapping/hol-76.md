@@ -1,4 +1,4 @@
-# Create Event Source Mapping - HOL76
+# Create Event Source Mapping - HOL-76
 
 ### Description
 

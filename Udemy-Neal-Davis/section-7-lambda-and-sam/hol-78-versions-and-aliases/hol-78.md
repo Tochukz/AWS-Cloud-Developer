@@ -1,4 +1,4 @@
-# Using Versions and Aliases - HOL78
+# Using Versions and Aliases - HOL-78
 
 ### Description
 

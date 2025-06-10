@@ -1,4 +1,4 @@
-# Invoking Functions - HOL75
+# Invoking Functions - HOL-75
 
 ### Description
 

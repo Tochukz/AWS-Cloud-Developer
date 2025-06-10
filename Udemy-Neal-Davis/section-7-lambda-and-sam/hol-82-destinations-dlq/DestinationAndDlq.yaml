@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configure Lambda function with SQS Queue as invocation destination
+
+Parameters:
+  SubscriptionEmail:
+    Type: String
+    Description: Email address to subscribe to the failure SNS topic
+
+Resources:
+  SuccessQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: success-queue-11
+
+  DlQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: dl-queue-11
+
+  FailureTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: FailureTopic
+
+  Subscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref FailureTopic
+      Endpoint: !Ref SubscriptionEmail
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaDestinationRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        # - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+      Policies:
+        - PolicyName: LambdaSQSPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AllowSQSSendMessage
+                Effect: Allow
+                Action: sqs:SendMessage
+                Resource:
+                  - !GetAtt SuccessQueue.Arn
+                  - !GetAtt DlQueue.Arn
+              - Sid: AllowSnsPublish
+                Effect: Allow
+                Action: sns:Publish
+                Resource: !Ref FailureTopic
+
+  DestinationFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: DestinationFunc
+      Handler: index.handler
+      Runtime: python3.9
+      Role: !GetAtt LambdaRole.Arn
+      DeadLetterConfig:
+        TargetArn: !GetAtt DlQueue.Arn
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        ZipFile: |
+          import json
+          from datetime import datetime
+
+          def handler(event, context):
+              event_received_at = datetime.utcnow().isoformat()
+              print('Event received at:', event_received_at)
+              print('Received event:', json.dumps(event))
+
+              success_flag = event.get('Success')
+
+              if success_flag is True:
+                  print("Success")
+                  return {
+                      "statusCode": 200,
+                      "body": "Function succeeded"
+                  }
+              else:
+                  print("Failure")
+                  raise Exception("Failure from event, Success = false, I am failing!")
+
+  LambdaDestination:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref DestinationFunc
+      Qualifier: $LATEST
+      MaximumEventAgeInSeconds: 21600 # 6 hours
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnSuccess:
+          Destination: !GetAtt SuccessQueue.Arn
+        OnFailure:
+          Destination: !Ref FailureTopic
+
+  # LambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !Ref LambdaFunction
+  #     Principal: sqs.amazonaws.com
+  #     SourceArn: !GetAtt SuccessQueue.Arn
+
+Outputs:
+  SuccessQueueUrl:
+    Description: URL of the success SQS queue
+    Value: !Ref SuccessQueue
+  DlQueueUrl:
+    Description: URL of the dead-letter SQS queue
+    Value: !Ref DlQueue
+  FailureTopicArn:
+    Description: ARN of the failure SNS topic
+    Value: !Ref FailureTopic
