@@ -19,6 +19,9 @@ __Event source mapping:__
 __Lambda Function Concurrency__  
 If concurrency limit is exceeded throttling occurs with error _"Rate exceeded"_ and a 429 "TooManyRequestsException" .
 
+__Lambda Function Limits__  
+![](slides/lambda-function-limits.png)
+
 ### Lambda Invocation
 __Lambda API Invocation__  
 You can invoke a REST API Lambda code behind an API gateway to simulate a HTTP request:
@@ -41,3 +44,25 @@ Alternatively, you can run the `lambda-logs-v2.sh` script to have the log decode
 $ cd scripts
 $ ./lambda-logs-v2.sh FunctionName
 ```
+
+__Success and Failure Destinations__  
+* Send invocation records to a destination when your function is invoked
+* Works for asynchronous invocations and Stream invocations (Kinesis/DynamoDB stream)
+* Choose the condition as success of failure
+* Destination type is SQS queue, SNS topic, Lambda function, or EventBridge event bus
+* The execution record contains details about the request and response in JSON format
+* Information sent includes:
+  - Version
+  - Timestamp
+  - Request context
+  - Request payload
+  - Response context
+  - Response payload
+
+__Dead-Letter Queue (DLQ)__
+* A DLQ saves unprocessed events for further processing
+* Applies to asynchronous invocations
+* The DLQ can be an Amazon SQS queue or an Amazon SNS topic
+* When editing the asynchronous configuration, you can specify the number of retries:
+  - Lambda will retry processing up to 2 times.
+  - After 6 hours the event is discarded and can be sent to a DLQ

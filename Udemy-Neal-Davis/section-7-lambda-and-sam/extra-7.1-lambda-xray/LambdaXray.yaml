@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: AWS Lambda function with X-Ray tracing enabled
+
+Resources:
+  FuncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: FuncRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: lambda-xray-permissions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: "*"
+
+  SimpleFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunc
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt FuncRole.Arn
+      TracingConfig:
+        Mode: Active # Enables X-Ray tracing
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Hello from Lambda!')
+              }

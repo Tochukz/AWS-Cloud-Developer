@@ -58,6 +58,8 @@ Invoke the lambda function
 $ aws lambda invoke --function-name SimpleFunc --log-type Tail output.json --no-cli-page
 ```
 
+<!-- @todo: There is an error in the python code, "errorMessage": "An error occurred (InvalidCiphertextException) when calling the Decrypt operation: -->
+
 **Cleanup**
 
 To delete the stacks
