@@ -131,3 +131,54 @@ __AWS Signer__
 * Signer is used to create digitally signed packages for deployment
 * IAM policies can enforce that functions can be created only if they have code signing enabled
 * If a developer leaves you can revoke all versions of the signing profile so the code cannot run
+
+__Best Practices – Function Code__  
+* Separate the Lambda handler from your core logic
+* Take advantage of execution environment reuse to improve the performance of your function
+* Use a keep-alive directive to maintain persistent connections
+* Use environment variables to pass operational parameters to your function
+* Control the dependencies in your function's deployment package
+* Minimize your deployment package size to its runtime necessities
+* Avoid using recursive code in your function
+
+## AWS Serverless Application Model (SAM)
+__Introduction__  
+* Provides a shorthand syntax to express functions, APIs, databases, and event source mappings
+* Can be used to create Lambda functions, API endpoints, DynamoDB tables, and other resources
+* A SAM template file is a YAML configuration that represents the architecture of a serverless application
+* You use the template to declare all the AWS resources that comprise your serverless application in one place
+* AWS SAM templates are an extension of AWS CloudFormation templates
+* Any resource that you can declare in an AWS CloudFormation template can also be declared in an AWS SAM template
+
+__AWS SAM Commands__  
+1. Package SAM application
+```bash
+$ sam package -t template.yaml --s3-bucket dctlabs --output-template-file packaged-template.yaml
+```
+2. Deploy SAM application
+```bash
+$ sam deploy --template-file packaged-template.yaml --stack-name my-cf-stack
+```
+
+Alternatively, you can do the same using `cloudformation`:
+
+1. Package SAM application using `cloudformation`
+```bash
+$ aws cloudformation package --template-file template.yaml --s3-bucket dctlabs --output-template-file packaged-template.yaml
+```
+2. Deploy SAM template using `cloudformation`
+```bash
+$ aws cloudformation deploy --template-file packaged-template.yaml --stack-name my-cf-stack
+```
+
+__AWS SAM Transform Header__  
+The “Transform” header indicates it’s a SAM template:
+* `Transform: 'AWS::Serverless-2016-10-31'`
+
+There are several resources types:
+* `AWS::Serverless::Function` (AWS Lambda)
+* `AWS::Serverless::Api` (API Gateway)
+* `AWS::Serverless::SimpleTable` (DynamoDB)
+* `AWS::Serverless::Application` (AWS Serverless Application Repository)
+* `AWS::Serverless::HttpApi` (API Gateway HTTP API)
+* `AWS::Serverless::LayerVersion` (Lambda layers)
