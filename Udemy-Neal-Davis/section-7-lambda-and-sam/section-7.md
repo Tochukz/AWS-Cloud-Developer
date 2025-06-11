@@ -59,10 +59,75 @@ __Success and Failure Destinations__
   - Response context
   - Response payload
 
-__Dead-Letter Queue (DLQ)__
+__Dead-Letter Queue (DLQ)__  
 * A DLQ saves unprocessed events for further processing
 * Applies to asynchronous invocations
 * The DLQ can be an Amazon SQS queue or an Amazon SNS topic
 * When editing the asynchronous configuration, you can specify the number of retries:
   - Lambda will retry processing up to 2 times.
   - After 6 hours the event is discarded and can be sent to a DLQ
+
+__Concurrency Limits__  
+* The default concurrency limit per AWS Region is 1,000 invocations at any given time
+* The default burst concurrency quota per Region is between 500 and 3,000, which varies per Region
+* There is no maximum concurrency limit for Lambda functions (depends on use case)
+* To avoid throttling request limit increases at least 2 weeks ahead of time
+
+__Reserved Concurrency__  
+* Reserved concurrency guarantees a set number of concurrent executions will be available for a critical function
+* You can reserve up to the Unreserved account concurrency value, minus 100 for functions that don't have reserved concurrency
+* To throttle a function, set the reserved
+concurrency to zero. This stops any events
+from being processed until you remove the
+limit
+
+__Provisioned Concurrency__  
+* When provisioned concurrency is allocated, the function scales with the same burst behavior as standard concurrency
+* After it's allocated, provisioned concurrency serves incoming requests with very low latency
+* When all provisioned concurrency is in use, the function scales up normally to handle any additional requests
+* Application Auto Scaling takes this a step further by providing autoscaling for provisioned concurrency
+
+### Monitoring, Logging, and Tracing
+__Performance Monitoring - CloudWatch__  
+* Lambda sends metrics to Amazon CloudWatch for performance monitoring
+* Execution logs are stored in Amazon CloudWatch Logs
+* The Lambda function execution role must have permissions (IAM) to allow writes to CloudWatch Logs
+
+__Tracing with AWS X-Ray__  
+* You can use AWS X-Ray to visualize the components of your application, identify performance bottlenecks, and troubleshoot requests that resulted in an error
+* Your Lambda functions send trace data to X-Ray, and X-Ray processes the data to generate a service map and searchable trace summaries
+* The AWS X-Ray Daemon is a software application that gathers raw segment data and relays it to the AWS X-Ray service
+* The daemon works in conjunction with the AWS X-Ray SDKs so that data sent by the SDKs can reach the X-Ray service
+* When you trace your Lambda function, the X-Ray daemon automatically runs in the Lambda environment to gather trace data and send it to X-Ray
+* The function needs permissions to write to X-Ray in the execution role
+
+__Connecting Lambda to an Amazon VPC__  
+* You must connect to a private subnet with a NAT Gateway for Internet access (no public IP)
+* Careful with DNS resolution of public hostnames as it could add to function running time (cost)
+* Cannot be connected to a dedicated tenancy VPC
+* Only connect to a VPC if you need to, it can slow down function execution
+* To connect to a VPC, your function's execution role must have the following permissions:
+  - `ec2:CreateNetworkInterface`
+  - `ec2:DescribeNetworkInterfaces`
+  - `ec2:DeleteNetworkInterface`
+* These permissions are included in the `AWSLambdaVPCAccessExecutionRole` managed policy
+
+__Lambda Function as a Target for an ALB__  
+* Application Load Balancers (ALBs) support AWS Lambda functions as targets
+* You can register your Lambda functions as targets and configure a listener rule to forward requests to the target group for your Lambda function
+
+There are some limits to understand:
+* The Lambda function and target group must be in the same account and in the same Region
+* The maximum size of the request body that you can send to a Lambda function is 1 MB
+* The maximum size of the response JSON that the Lambda function can send is 1 MB
+* WebSockets are not supported. Upgrade requests are rejected with an HTTP 400 code
+* Local Zones are not supported
+
+__AWS Signer__  
+* AWS Signer is a fully managed code-signing service
+* Used to ensure the trust and integrity of code
+* Code is validated against a digital signature
+* With Lambda you can ensure only trusted code runs in Lambda functions
+* Signer is used to create digitally signed packages for deployment
+* IAM policies can enforce that functions can be created only if they have code signing enabled
+* If a developer leaves you can revoke all versions of the signing profile so the code cannot run
