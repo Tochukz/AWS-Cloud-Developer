@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create DynamoDB tables with different primary key configurations.
+
+Resources:
+  # DynamoDB Table with Partition Key as Primary key
+  PostTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Posts
+      TableClass: STANDARD # or STANDARD_INFREQUENT_ACCESS
+      AttributeDefinitions:
+        - AttributeName: PostId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PostId
+          KeyType: HASH
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      # SSESpecification:
+      #   SSEEnabled: true
+      #   KMSMasterKeyId: alias/aws/dynamodb
+
+  # DynamoDB Table with Partition Key + Sort Key (i.e Composite Key) as Primary key
+  OrderTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Orders
+      TableClass: STANDARD
+      AttributeDefinitions:
+        - AttributeName: ClientId
+          AttributeType: S
+        - AttributeName: CreatedAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ClientId
+          KeyType: HASH
+        - AttributeName: CreatedAt
+          KeyType: RANGE
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5

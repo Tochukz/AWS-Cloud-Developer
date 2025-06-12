@@ -1,0 +1,5 @@
+{
+  "ClientId": { "S": "john@yahoo.com" },
+  "CreatedAt": { "S": "2022-05-10T12:30Z" },
+  "Category": { "S": "Phone" }
+}
