@@ -1,0 +1,76 @@
+{
+  "Orders": [
+    {
+      "PutRequest": {
+        "Item": {
+          "clientId": {
+            "S": "john@example.com"
+          },
+          "createdAt": {
+            "S": "2020-03-9T08:12Z"
+          },
+          "sku": {
+            "S": "SKU-S523"
+          },
+          "expiresAt": {
+            "N": "1749850200"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "clientId": {
+            "S": "chris@example.com"
+          },
+          "createdAt": {
+            "S": "2020-03-10T14:30Z"
+          },
+          "sku": {
+            "S": "SKU-J091"
+          },
+          "expiresAt": {
+            "N": "1749850380"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "clientId": {
+            "S": "chris@example.com"
+          },
+          "createdAt": {
+            "S": "2020-03-10T15:30Z"
+          },
+          "sku": {
+            "S": "SKU-A234"
+          },
+          "expiresAt": {
+            "N": "1749850500"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "clientId": {
+            "S": "sarah@example.com"
+          },
+          "createdAt": {
+            "S": "2020-03-12T7:42Z"
+          },
+          "sku": {
+            "S": "SKU-R873"
+          },
+          "expiresAt": {
+            "N": "1749850680"
+          }
+        }
+      }
+    }
+  ]
+}
