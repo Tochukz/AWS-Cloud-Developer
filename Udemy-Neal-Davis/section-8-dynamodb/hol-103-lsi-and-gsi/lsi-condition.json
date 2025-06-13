@@ -1,0 +1,10 @@
+{
+  "clientId": {
+    "ComparisonOperator": "EQ",
+    "AttributeValueList": [{ "S": "chris@example.com" }]
+  },
+  "sku": {
+    "ComparisonOperator": "EQ",
+    "AttributeValueList": [{ "S": "SKU-A234" }]
+  }
+}

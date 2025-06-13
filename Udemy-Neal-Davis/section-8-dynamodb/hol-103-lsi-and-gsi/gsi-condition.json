@@ -1,0 +1,10 @@
+{
+  "sku": {
+    "ComparisonOperator": "EQ",
+    "AttributeValueList": [{ "S": "SKU-J091" }]
+  },
+  "qty": {
+    "ComparisonOperator": "EQ",
+    "AttributeValueList": [{ "N": "1" }]
+  }
+}

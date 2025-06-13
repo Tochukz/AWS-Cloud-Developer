@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create a Local Secondary Index (LSI) and a Global Secondary Index (GSI) for a DynamoDB table.
+
+Resources:
+  LsiTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LsiOrders
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      AttributeDefinitions:
+        - AttributeName: clientId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+        - AttributeName: sku
+          AttributeType: S
+      KeySchema:
+        - AttributeName: clientId
+          KeyType: HASH
+        - AttributeName: createdAt
+          KeyType: RANGE
+      LocalSecondaryIndexes:
+        - IndexName: sku-index
+          KeySchema:
+            - AttributeName: clientId
+              KeyType: HASH
+            - AttributeName: sku
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  GsiTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: GsiOrders
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      AttributeDefinitions:
+        - AttributeName: clientId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+        - AttributeName: sku
+          AttributeType: S
+        - AttributeName: qty
+          AttributeType: N
+      KeySchema:
+        - AttributeName: clientId
+          KeyType: HASH
+        - AttributeName: createdAt
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: sku-qty-index
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+          KeySchema:
+            - AttributeName: sku
+              KeyType: HASH
+            - AttributeName: qty
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
