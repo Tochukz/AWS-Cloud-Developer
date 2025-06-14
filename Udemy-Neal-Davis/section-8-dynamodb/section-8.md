@@ -246,3 +246,50 @@ $ aws dynamodb delete-item --table-name ProductCataglog --key '{"Id": {"N": "456
 ```bash
 $ aws dynamodb delete-item --table-name ProductCatalog --key '{"Id": {"N": "456"}}' --condition-expression '(ProductCategory IN (:cat1, :cat2)) and (Price between :low and :hi)' --expression-attribute-values file://values.json
 ```
+
+### Adding a Time to Live (TTL) to Items
+__DynamoDB Time to Live (TTL)__  
+* TTL lets you define when items in a table expire so that they can be automatically deleted from the database
+* With TTL enabled on a table, you can set a timestamp for deletion on a per-item basis
+* No extra cost and does not use WCU / RCU
+* Helps reduce storage and manage the table size over time
+
+### Amazon DynamoDB Streams
+__Amazon DynamoDB Streams__  
+* DynamoDB Streams captures a __time-ordered sequence__ of __item-level modifications__ in any DynamoDB table
+* The information is stored in a log for up to 24 hours
+* Applications can access this log and view the data items as they appeared before and after they were modified, in near-real time
+* You can also use the `CreateTable` or `UpdateTable` API operations to enable or modify a stream
+• The `StreamSpecification` parameter determines how the stream is configured:
+* `StreamEnabled` — Specifies whether a stream is enabled (true) or disabled (false) for the table
+* `StreamViewType` — Specifies the information that will be written to the stream whenever data in the table is modified:
+  * __KEYS_ONLY__ — Only the key attributes of the modified item
+  * __NEW_IMAGE__ — The entire item, as it appears after it was modified
+  * __OLD_IMAGE__ — The entire item, as it appeared before it was modified
+  * __NEW_AND_OLD_IMAGES__ — Both the new and the old images of the item
+
+### Amazon DynamoDB Accelerator (DAX)
+__Amazon DynamoDB Accelerator (DAX)__  
+* DAX is a managed service that provides in-memory acceleration for DynamoDB tables
+* Improves performance from __milliseconds__ to __microseconds__, even at millions of requests per second
+* Provides managed cache invalidation, data population, and cluster management
+* DAX is used to improve __READ performance__ (not writes)
+* You do not need to modify application logic, since DAX is compatible with existing DynamoDB API calls
+* You can enable DAX with just a few clicks in the AWS Management Console or using the AWS SDK
+* Just as with DynamoDB, you only pay for the capacity you provision
+* Provisioned through clusters and charged by the node (runs on EC2 instances)
+* Pricing is per node-hour consumed and is dependent on the instance type you select
+
+__DAX vs ElastiCache__   
+* DAX is optimized for DynamoDB
+* With ElastiCache you have more management overhead (e.g. invalidation)
+* With ElastiCache you need to modify application code to point to cache
+* ElastiCache supports more datastores
+
+### Amazon DynamoDB Global Tables
+__Amazon DynamoDB Global Tables__  
+* DynamoDB global tables is a fully managed solution for deploying a multi-region, multi-master database
+* When you create a global table, you specify the AWS Regions where you want the table to be available
+* DynamoDB performs all the necessary tasks to create identical tables in these regions, and propagate ongoing data changes to all of them
+* The regional replication is __Asynchronous replication__.  
+* Uses logic in the application to __failover__ to a replica region
