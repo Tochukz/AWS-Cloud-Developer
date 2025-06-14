@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configures a DynamoDB global table
+
+Parameters:
+  Regions:
+    Type: CommaDelimitedList
+    Description: List of regions for the global table replicas
+    Default: eu-west-1,eu-west-2
+
+Resources:
+  GlobalTable:
+    Type: AWS::DynamoDB::GlobalTable
+    Properties:
+      TableName: GlobalOrders
+      BillingMode: PROVISIONED
+      AttributeDefinitions:
+        - AttributeName: clientId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: clientId
+          KeyType: HASH
+        - AttributeName: createdAt
+          KeyType: RANGE
+      WriteProvisionedThroughputSettings:
+        WriteCapacityAutoScalingSettings:
+          MinCapacity: 1
+          MaxCapacity: 2
+          TargetTrackingScalingPolicyConfiguration:
+            TargetValue: 70.0
+            ScaleInCooldown: 60
+            ScaleOutCooldown: 60
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Replicas:
+        - Region: !Select [0, !Ref Regions]
+          ReadProvisionedThroughputSettings:
+            ReadCapacityUnits: 1
+        - Region: !Select [1, !Ref Regions]
+          ReadProvisionedThroughputSettings:
+            ReadCapacityUnits: 1

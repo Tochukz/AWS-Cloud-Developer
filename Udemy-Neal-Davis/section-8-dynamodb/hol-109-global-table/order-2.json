@@ -1,0 +1,5 @@
+{
+  "clientId": { "S": "peter@yahoo.com" },
+  "createdAt": { "S": "2022-05-12T21:04Z" },
+  "category": { "S": "EuWest-2-Computer" }
+}
