@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configures Standard and FIFO SQS Queues
+
+Parameters:
+  StandardQueueName:
+    Type: String
+    Description: Name of the standard SQS queue
+    Default: standard-queue14
+
+Resources:
+  StandardDlQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: standard-dlq-14
+      RedriveAllowPolicy:
+        redrivePermission: byQueue
+        sourceQueueArns:
+          - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${StandardQueueName}
+
+  StandardQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref StandardQueueName
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt StandardDlQueue.Arn
+        maxReceiveCount: 3
+
+  FifoQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: fifo-queue14.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: false # if true, SQS uses a SHA-256 hash of the message body to generate the deduplication ID
+      DeduplicationScope: messageGroup # or queue
+      FifoThroughputLimit: perQueue # or perMessageGroupId
+
+Outputs:
+  StandardQueueUrl:
+    Description: URL of the standard SQS queue
+    Value: !Ref StandardQueue
+  StandardDlQueueUrl:
+    Description: URL of the standard dead-letter queue
+    Value: !Ref StandardDlQueue
+  FifoQueueUrl:
+    Description: URL of the FIFO SQS queue
+    Value: !Ref FifoQueue
