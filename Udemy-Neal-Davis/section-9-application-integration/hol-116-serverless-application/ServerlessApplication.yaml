@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  SubscriptionEmail:
+    Type: String
+    Description: Email address to subscribe to the SNS topic
+
+Resources:
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: SimpleTopic15
+
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: SimpleQueue15
+
+  QueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref Queue
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt Queue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref Topic
+
+  SubscriptionForQueue:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref Topic
+      Endpoint: !GetAtt Queue.Arn
+      Protocol: sqs
+
+  SubscriptionForEmail:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref Topic
+      Endpoint: !Ref SubscriptionEmail
+      Protocol: email
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+      Policies:
+        - PolicyName: LambdaSQSSendMessagePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref Topic
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunct15
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.9
+      Timeout: 30
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+              for record in event.get("Records", []):
+                  try:
+                      body = record.get("body", "")
+                      print('Received message: ', json.dumps(body))
+                  except Exception as e:
+                      print(f"Error processing record: {e}")
+              
+              return {"statusCode": 200, "body": "Processed successfully"}
+
+  EventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt Queue.Arn
+      FunctionName: !GetAtt LambdaFunc.Arn
+      Enabled: true
+      BatchSize: 10
+
+Outputs:
+  TopicArn:
+    Value: !Ref Topic
