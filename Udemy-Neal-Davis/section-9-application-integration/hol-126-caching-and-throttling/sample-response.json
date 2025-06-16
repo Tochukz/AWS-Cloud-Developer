@@ -1,0 +1,87 @@
+{
+  "message": "Good day, Chucks of Cape Town.",
+  "input": {
+    "resource": "/hello",
+    "path": "/hello",
+    "httpMethod": "GET",
+    "headers": {
+      "accept": "*/*",
+      "Host": "m4ytro5u49.execute-api.eu-west-2.amazonaws.com",
+      "User-Agent": "curl/7.79.1",
+      "X-Amzn-Trace-Id": "Root=1-68506956-69bb51a90c4d4e015520bdb6",
+      "X-Forwarded-For": "41.124.57.158",
+      "X-Forwarded-Port": "443",
+      "X-Forwarded-Proto": "https"
+    },
+    "multiValueHeaders": {
+      "accept": [
+        "*/*"
+      ],
+      "Host": [
+        "m4ytro5u49.execute-api.eu-west-2.amazonaws.com"
+      ],
+      "User-Agent": [
+        "curl/7.79.1"
+      ],
+      "X-Amzn-Trace-Id": [
+        "Root=1-68506956-69bb51a90c4d4e015520bdb6"
+      ],
+      "X-Forwarded-For": [
+        "41.124.57.158"
+      ],
+      "X-Forwarded-Port": [
+        "443"
+      ],
+      "X-Forwarded-Proto": [
+        "https"
+      ]
+    },
+    "queryStringParameters": {
+      "city": "Cape Town",
+      "name": "Chucks"
+    },
+    "multiValueQueryStringParameters": {
+      "city": [
+        "Cape Town"
+      ],
+      "name": [
+        "Chucks"
+      ]
+    },
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+      "resourceId": "rwfppb",
+      "resourcePath": "/hello",
+      "httpMethod": "GET",
+      "extendedRequestId": "MRVlpGpLLPEEhCQ=",
+      "requestTime": "16/Jun/2025:18:58:30 +0000",
+      "path": "/prod/hello",
+      "accountId": "314146339647",
+      "protocol": "HTTP/1.1",
+      "stage": "prod",
+      "domainPrefix": "m4ytro5u49",
+      "requestTimeEpoch": 1750100310922,
+      "requestId": "d5c40900-567c-468b-aff4-f07b8016431b",
+      "identity": {
+        "cognitoIdentityPoolId": null,
+        "accountId": null,
+        "cognitoIdentityId": null,
+        "caller": null,
+        "sourceIp": "41.124.57.158",
+        "principalOrgId": null,
+        "accessKey": null,
+        "cognitoAuthenticationType": null,
+        "cognitoAuthenticationProvider": null,
+        "userArn": null,
+        "userAgent": "curl/7.79.1",
+        "user": null
+      },
+      "domainName": "m4ytro5u49.execute-api.eu-west-2.amazonaws.com",
+      "deploymentId": "8g8m69",
+      "apiId": "m4ytro5u49"
+    },
+    "body": null,
+    "isBase64Encoded": false
+  }
+}
