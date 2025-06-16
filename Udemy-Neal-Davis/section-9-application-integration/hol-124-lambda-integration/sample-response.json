@@ -1,0 +1,95 @@
+{
+  "message": "Good Evening, Chucks of Cape Town. Happy Monday!",
+  "input": {
+    "resource": "/hello",
+    "path": "/hello",
+    "httpMethod": "POST",
+    "headers": {
+      "accept": "*/*",
+      "content-type": "application/json",
+      "day": "Monday",
+      "Host": "4q25cu6xo1.execute-api.eu-west-2.amazonaws.com",
+      "User-Agent": "curl/7.79.1",
+      "X-Amzn-Trace-Id": "Root=1-68505bf5-33e7459f1831b2b5604d04c2",
+      "X-Forwarded-For": "41.124.57.158",
+      "X-Forwarded-Port": "443",
+      "X-Forwarded-Proto": "https"
+    },
+    "multiValueHeaders": {
+      "accept": [
+        "*/*"
+      ],
+      "content-type": [
+        "application/json"
+      ],
+      "day": [
+        "Monday"
+      ],
+      "Host": [
+        "4q25cu6xo1.execute-api.eu-west-2.amazonaws.com"
+      ],
+      "User-Agent": [
+        "curl/7.79.1"
+      ],
+      "X-Amzn-Trace-Id": [
+        "Root=1-68505bf5-33e7459f1831b2b5604d04c2"
+      ],
+      "X-Forwarded-For": [
+        "41.124.57.158"
+      ],
+      "X-Forwarded-Port": [
+        "443"
+      ],
+      "X-Forwarded-Proto": [
+        "https"
+      ]
+    },
+    "queryStringParameters": {
+      "city": "Cape Town",
+      "name": "Chucks"
+    },
+    "multiValueQueryStringParameters": {
+      "city": [
+        "Cape Town"
+      ],
+      "name": [
+        "Chucks"
+      ]
+    },
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+      "resourceId": "yz96z8",
+      "resourcePath": "/hello",
+      "httpMethod": "POST",
+      "extendedRequestId": "MRNOdEdJrPEEpmw=",
+      "requestTime": "16/Jun/2025:18:01:25 +0000",
+      "path": "/prod/hello",
+      "accountId": "314146339647",
+      "protocol": "HTTP/1.1",
+      "stage": "prod",
+      "domainPrefix": "4q25cu6xo1",
+      "requestTimeEpoch": 1750096885767,
+      "requestId": "968f97d4-c2bf-484a-93ad-6869fbc85947",
+      "identity": {
+        "cognitoIdentityPoolId": null,
+        "accountId": null,
+        "cognitoIdentityId": null,
+        "caller": null,
+        "sourceIp": "41.124.57.158",
+        "principalOrgId": null,
+        "accessKey": null,
+        "cognitoAuthenticationType": null,
+        "cognitoAuthenticationProvider": null,
+        "userArn": null,
+        "userAgent": "curl/7.79.1",
+        "user": null
+      },
+      "domainName": "4q25cu6xo1.execute-api.eu-west-2.amazonaws.com",
+      "deploymentId": "ik65wt",
+      "apiId": "4q25cu6xo1"
+    },
+    "body": "{ \"time\": \"Evening\" }",
+    "isBase64Encoded": false
+  }
+}

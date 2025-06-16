@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Created API Gateway with Lambda Proxy Integration
+
+Parameters:
+  CodeS3Bucket:
+    Type: String
+    Description: S3 bucket where the Lambda function code is stored
+    Default: chucks-workspace-storage
+  CodeS3Key:
+    Type: String
+    Description: S3 key for the Lambda function code
+    Default: v0.0.1/hol-124-lambda.zip
+  ProdStageName:
+    Type: String
+    Description: Name of the production stage for the API Gateway
+    Default: prod
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  SimpleFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunc124
+      Handler: lambda.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.9
+      Timeout: 30
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+
+  SimpleApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: SimpleApiGateway
+      Description: API Gateway for SimpleFunc124
+      EndpointConfiguration:
+        Types:
+          - REGIONAL # or EDGE, PRIVATE
+
+  HelloResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref SimpleApi
+      ParentId: !GetAtt SimpleApi.RootResourceId
+      PathPart: hello
+
+  HelloMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref SimpleApi
+      ResourceId: !Ref HelloResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST #  For Lambda integrations, you must set the integration method to POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SimpleFunc.Arn}/invocations
+        TimeoutInMillis: 29000 # The default value is 29,000 milliseconds or 29 seconds.
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SimpleFunc
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SimpleApi}/*
+
+  ProdDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: HelloMethod
+    Properties:
+      RestApiId: !Ref SimpleApi
+      StageName: !Ref ProdStageName # Optional: Will auto-create a stage
+
+  # ProdStage:
+  #   Type: AWS::ApiGateway::Stage
+  #   Properties:
+  #     StageName: !Ref ProdStageName
+  #     RestApiId: !Ref SimpleApi
+  #     DeploymentId: !Ref ProdDeployment
+
+Outputs:
+  ApiEndpoint:
+    Description: URL of the API Gateway
+    Value: !Sub https://${SimpleApi}.execute-api.${AWS::Region}.amazonaws.com/${ProdStageName}/hello
+    Export:
+      Name: SimpleApiUrl
