@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Configure Caching and Throttling for API Gateway Stage
+Description: Created API Gateway with Lambda Proxy Integration
 
 Parameters:
   CodeS3Bucket:
@@ -10,7 +10,7 @@ Parameters:
   CodeS3Key:
     Type: String
     Description: S3 key for the Lambda function code
-    Default: v0.0.1/hol-126-lambda.zip
+    Default: v0.0.1/hol-128-lambda.zip
   ProdStageName:
     Type: String
     Description: Name of the production stage for the API Gateway
@@ -65,6 +65,7 @@ Resources:
       ResourceId: !Ref HelloResource
       HttpMethod: ANY
       AuthorizationType: NONE
+      ApiKeyRequired: true
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST #  For Lambda integrations, you must set the integration method to POST
@@ -89,22 +90,76 @@ Resources:
     Type: AWS::ApiGateway::Stage
     Properties:
       StageName: !Ref ProdStageName
-      RestApiId: !Ref SimpleApi
       DeploymentId: !Ref ProdDeployment
-      CacheClusterEnabled: true # Caching is not eligible for Free tier,
-      CacheClusterSize: 0.5 # 0.5GB, 0.5GB = $0.02 per hour
-      MethodSettings:
-        - HttpMethod: "*"
-          ResourcePath: /*
-          CachingEnabled: true
-          CacheDataEncrypted: false
-          CacheTtlInSeconds: 300
-          ThrottlingRateLimit: 10000 # requests per second burst limit
-          ThrottlingBurstLimit: 5000 # requests
+      RestApiId: !Ref SimpleApi
+
+  BasicApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: BasicKey
+      Description: API Key for basic user
+      Enabled: true
+      GenerateDistinctId: true
+
+  AdvancedApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: AdvancedKey
+      Description: API Key for advanced user
+      Enabled: true
+      GenerateDistinctId: true
+
+  BasicUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: Basic
+      Description: Usage plan for basic customer
+      ApiStages:
+        - ApiId: !Ref SimpleApi
+          Stage: !Ref ProdStage
+      Quota:
+        Limit: 10000 # Total number of requests allowed
+        Period: MONTH
+      Throttle:
+        BurstLimit: 50
+        RateLimit: 100
+
+  AdavancedUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: Advanced
+      Description: Usage plan for advanced customers
+      ApiStages:
+        - ApiId: !Ref SimpleApi
+          Stage: !Ref ProdStage
+      Quota:
+        Limit: 50000 # Total number of requests allowed
+        Period: MONTH
+      Throttle:
+        BurstLimit: 500
+        RateLimit: 1000
+
+  BasicKeyToUsagePlan:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref BasicApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref BasicUsagePlan
+
+  AdvancedKeyToUsagePlan:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref AdvancedApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref AdavancedUsagePlan
 
 Outputs:
   ApiEndpoint:
     Description: URL of the API Gateway
     Value: !Sub https://${SimpleApi}.execute-api.${AWS::Region}.amazonaws.com/${ProdStageName}/hello
-    Export:
-      Name: SimpleApiUrl
+  BasicApiKey:
+    Description: API Key ID for the Basic Plan
+    Value: !Ref BasicApiKey
+  AdvancedApiKey:
+    Description: API Key ID for the Advanced Plan
+    Value: !Ref AdvancedApiKey
