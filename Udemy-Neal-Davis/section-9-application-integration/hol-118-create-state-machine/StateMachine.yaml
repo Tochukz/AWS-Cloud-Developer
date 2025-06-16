@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates a StepFunction State Machine
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  AdditionFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: AdditionFunc
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.9
+      Code:
+        ZipFile: |
+          import random
+
+          def handler(event, context):
+            number1 = random.random()
+            number2 = random.random()
+            result = number1 + number2
+            return {"addition_result": result}
+
+  MultiplicationFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: MultiplicationFunc
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.9
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              constant = 10  # Define your constant here
+              result = event['addition_result'] * constant
+              return {"final_result": result}
+
+  DivisionFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: DivisionFunc
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.9
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              constant = 10  # Define your constant here
+              result = event['addition_result'] / constant
+              return {"final_result": result}
+
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StateMachineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt AdditionFunc.Arn
+                  - !GetAtt MultiplicationFunc.Arn
+                  - !GetAtt DivisionFunc.Arn
+
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: SimpleMachine
+      StateMachineType: STANDARD # or EXPRESS
+      RoleArn: !GetAtt StateMachineRole.Arn
+      Definition:
+        Comment: "Adds to random number, divide by 10 if result is greater than 1, otherwise multiply by 10"
+        StartAt: AddNumbers
+        States:
+          AddNumbers:
+            Type: Task
+            Resource: !GetAtt AdditionFunc.Arn
+            Next: CheckAdditionResult
+          CheckAdditionResult:
+            Type: Choice
+            Choices:
+              - Variable: "$.addition_result"
+                NumericLessThanEquals: 1
+                Next: MultiplyResult
+              - Variable: "$.addition_result"
+                NumericGreaterThan: 1
+                Next: DivideResult
+          MultiplyResult:
+            Type: Task
+            Resource: !GetAtt MultiplicationFunc.Arn
+            End: true
+          DivideResult:
+            Type: Task
+            Resource: !GetAtt DivisionFunc.Arn
+            End: true
