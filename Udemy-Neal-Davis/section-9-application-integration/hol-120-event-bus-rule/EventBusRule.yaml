@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  SubscriptionEmail:
+    Type: String
+    Description: "Email address to subscribe to the SNS topic"
+
+Resources:
+  SimpleTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: SimpleEvents
+      DisplayName: SimpleEventsTopic
+
+  TopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref SimpleTopic
+      Protocol: email
+      Endpoint: !Ref SubscriptionEmail
+
+  # Create CloudTrail Trail?
+
+  SimpleEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit (x86), for eu-west-2
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: SimpleEc2Instance
+
+  EventBridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EventBridgeToSnsRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EventBridgeToSnsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref SimpleTopic
+
+  EventBusRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: SimpleEc2StateChangeRule
+      Description: Publish EC2 State Change Events to SNS Topic
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.ec2
+        detail-type:
+          - EC2 Instance State-change Notification
+        detail:
+          state:
+            - stopped
+            - terminated
+            # - running
+      Targets:
+        - Id: SimpleTopicTarget
+          Arn: !Ref SimpleTopic
+          RoleArn: !GetAtt EventBridgeRole.Arn
+
+Outputs:
+  TopicArn:
+    Description: "ARN of the SNS Topic"
+    Value: !Ref SimpleTopic
+  Ec2InstanceId:
+    Description: "ID of the EC2 Instance"
+    Value: !Ref SimpleEc2
