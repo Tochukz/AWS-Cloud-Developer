@@ -118,7 +118,7 @@ Resources:
         - ApiId: !Ref SimpleApi
           Stage: !Ref ProdStage
       Quota:
-        Limit: 10000 # Total number of requests allowed
+        Limit: 5 # 10000 # Total number of requests allowed
         Period: MONTH
       Throttle:
         BurstLimit: 50

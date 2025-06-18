@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates Lambda Function, API Gateway, and DynamoDB Table
+
+Parameters:
+  CodeS3Bucket:
+    Type: String
+    Description: "S3 bucket where the Lambda function code is stored"
+    Default: chucks-workspace-storage
+  CodeS3Key:
+    Type: String
+    Description: "S3 key for the Lambda function code"
+    Default: v0.0.1/hol-129-lambda.zip
+  StageName:
+    Type: String
+    Description: "Stage name for the API Gateway"
+    Default: dev
+
+Resources:
+  ManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: MicroservicePolicy
+      Description: "Managed policy for microservice"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowDynamoDb
+            Effect: Allow
+            Action:
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+            Resource: "*"
+          - Sid: AllowCloudWatch
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: "*"
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MicroserviceLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref ManagedPolicy
+
+  BasicFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: BasicFunc
+      Handler: lambda.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.9
+      Timeout: 30
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: BasicApi
+      Description: "API for the basic Lambda function"
+      FailOnWarnings: true
+
+  Resource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: dynamodbmanager
+      RestApiId: !Ref RestApi
+
+  Method:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      ResourceId: !Ref Resource
+      RestApiId: !Ref RestApi
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BasicFunc.Arn}/invocations"
+
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: SimpleTable129
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BasicFunc
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/* # /POST/dynamodbmanager"
+
+  DevDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: Method
+    Properties:
+      RestApiId: !Ref RestApi
+      Description: "Deployment for Basic API"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/Microservice-${StageName}"
+      RetentionInDays: 7
+
+  DevStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: !Ref StageName
+      Description: Development stage for Basic API
+      DeploymentId: !Ref DevDeployment
+      RestApiId: !Ref RestApi
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: /*
+          LoggingLevel: INFO # OFF, ERROR, and INFO
+          DataTraceEnabled: true # set to false in production envrionment
+          MetricsEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt LogGroup.Arn
+        Format: '{"requestId":"$context.requestId","status":"$context.status","resourcePath":"$context.resourcePath","httpMethod":"$context.httpMethod","requestTime":"$context.requestTime"}'
+        # Format: '{"requestId":"$context.requestId", "ip":"$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod", "resourcePath":"$context.resourcePath", "status":"$context.status", "protocol":"$context.protocol"}'
+
+Outputs:
+  ApiEndpoint:
+    Description: "URL of the API Gateway"
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/dynamodbmanager"
+  LambdaFunctionArn:
+    Description: "ARN of the Lambda function"
+    Value: !GetAtt BasicFunc.Arn

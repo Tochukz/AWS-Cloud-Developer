@@ -1,0 +1,14 @@
+{
+  "operation": "update",
+  "tableName": "SimpleTable129",
+  "payload": {
+    "Key": {
+      "id": "1234ABCD"
+    },
+    "AttributeUpdates": {
+      "number": {
+        "Value": 999
+      }
+    }
+  }
+}

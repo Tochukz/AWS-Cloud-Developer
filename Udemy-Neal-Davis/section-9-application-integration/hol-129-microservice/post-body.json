@@ -1,0 +1,10 @@
+{
+  "operation": "create",
+  "tableName": "SimpleTable129",
+  "payload": {
+    "Item": {
+      "id": "1234ABCDE",
+      "number": 5
+    }
+  }
+}
