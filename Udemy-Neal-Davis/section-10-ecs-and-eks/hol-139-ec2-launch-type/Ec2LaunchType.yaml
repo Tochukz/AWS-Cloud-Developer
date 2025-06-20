@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create an ECS Cluster with an EC2 Launch Type and Register an EC2 Instance
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The ID of the VPC where the ECS cluster will be created.
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: A list of subnet IDs where the ECS instances will be launched.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: The name of the EC2 Key Pair to use for SSH access to the instances.
+    Default: DevSimpleKey
+
+Mappings:
+  # ECS Optimized AMIs. Go the EC2 Console > Images > AMI Catalog, search for "ECS-Optimized" in the search bar.
+  # Click on the Community AMIs tab, and select the latest Amazon ECS-Optimized Amazon Linux 2023 (AL2023) AMI.
+  Images:
+    eu-west-1:
+      Ami: ami-004a0e7b12a33e037 # Amazon ECS-Optimized Amazon Linux 2023 (AL2023) x86_64 AMI - 20241021-prod-2dxjmbuthyyeg
+    eu-west-2:
+      Ami: ami-001d6ec28301cd74b # Amazon ECS-Optimized Amazon Linux 2023 (AL2023) x86_64 AMI - 20250320-prod-2dxjmbuthyyeg
+    eu-west-3:
+      Ami: ami-013a2a7f30f6b9c58 # Amazon ECS-Optimized Amazon Linux 2023 (AL2023) arm64 AMI - 20250616-prod-he6odapr6awb6
+
+Resources:
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: SimpleInstanceProfile
+      Roles:
+        - !Ref InstanceRole
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: SimpleCluster
+
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebSecurityGroup
+      GroupDescription: Allow all inbound traffic
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allow SSH access from anywhere
+          IpProtocol: TCP
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [Images, !Ref "AWS::Region", Ami]
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds:
+        - !Ref WebSecurityGroup
+      SubnetId: !Select [0, !Ref SubnetIds]
+      Tags:
+        - Key: Name
+          Value: SimpleInstance
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+
+          echo ECS_CLUSTER=${Cluster} >> /etc/ecs/ecs.config
+
+          # The AMI already have ECS agent installed
+          # yum install -y amazon-ssm-agent
+          # systemctl enable amazon-ssm-agent
+          # systemctl start amazon-ssm-agent
