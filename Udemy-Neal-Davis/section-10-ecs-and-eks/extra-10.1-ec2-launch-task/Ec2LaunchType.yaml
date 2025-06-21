@@ -15,16 +15,17 @@ Parameters:
     Default: DevSimpleKey
 
 Mappings:
-  # ECS Optimized AMIs. Go the EC2 Console > Images > AMI Catalog, search for "ECS-Optimized" in the search bar.
+  # ECS Optimized AMIs. Go the EC2 Console > Images > AMI Catalog, search for "Amazon ECS-optimized Amazon Linux 2023 AMI" in the search bar.
   # Click on the Community AMIs tab, and select the latest Amazon ECS-Optimized Amazon Linux 2023 (AL2023) AMI.
   Images:
     eu-west-1:
-      Ami: ami-00285a945603a5def # amzn-ami-2018.03.20230705-amazon-ecs-optimized
+      Ami: "" #
     eu-west-2:
-      Ami: ami-018ba4a45a6b4034a # amzn-ami-2018.03.20230627-amazon-ecs-optimized
+      Ami: ami-040674feddbe27cb3 # Amazon Linux AMI 2023.0.20250618 x86_64 ECS HVM EBS
     eu-west-3:
-      Ami: ami-000bf98871804644a # amzn-ami-2018.03.20231114-amazon-ecs-optimized
-      # These AMI are outdated but latest ones required subscription to AWS Marketplace
+      Ami: "" #
+    # These AMI are outdated but latest ones required subscription to AWS Marketplace
+
 Resources:
   InstanceRole:
     Type: AWS::IAM::Role
@@ -38,7 +39,6 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
-        # - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -52,17 +52,22 @@ Resources:
     Properties:
       ClusterName: SimpleCluster
 
-  WebSecurityGroup:
+  EcsSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: WebSecurityGroup
-      GroupDescription: Allow all inbound traffic
+      GroupName: EcsSecurityGroup
+      GroupDescription: Allow SSH and HTTP traffic from anywhere
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - Description: Allow SSH access from anywhere
           IpProtocol: TCP
           FromPort: 22
           ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - Description: Allow HTTP access from anywhere
+          IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
           CidrIp: 0.0.0.0/0
 
   Instance:
@@ -73,7 +78,7 @@ Resources:
       KeyName: !Ref KeyName
       IamInstanceProfile: !Ref InstanceProfile
       SecurityGroupIds:
-        - !Ref WebSecurityGroup
+        - !Ref EcsSecurityGroup
       SubnetId: !Select [0, !Ref SubnetIds]
       Tags:
         - Key: Name
@@ -83,8 +88,38 @@ Resources:
           #!/bin/bash
 
           echo ECS_CLUSTER=${Cluster} >> /etc/ecs/ecs.config
+          # echo ECS_INSTANCE_ATTRIBUTES='{"instance-type":"t3.large"}' >> /etc/ecs/ecs.config
 
-          # The AMI already have ECS agent installed
-          # yum install -y amazon-ssm-agent
-          # systemctl enable amazon-ssm-agent
-          # systemctl start amazon-ssm-agent
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: NginxFamily
+      NetworkMode: bridge # awsvpc
+      RequiresCompatibilities:
+        - EC2
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      Cpu: "256"
+      Memory: "512"
+      # ExecutionRoleArn: "" # not required for EC2
+      # TaskRoleArn: ""
+      ContainerDefinitions:
+        - Name: NginxContainer
+          Image: nginx:latest
+          # Command: []
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+
+Outputs:
+  ClusterName:
+    Description: The name of the ECS cluster
+    Value: !Ref Cluster
+    Export:
+      Name: !Sub "${AWS::StackName}-ClusterName"
+  TaskDefinitionArn:
+    Description: The ARN of the ECS task definition
+    Value: !Ref TaskDefinition
+    Export:
+      Name: !Sub "${AWS::StackName}-TaskDefinitionArn"

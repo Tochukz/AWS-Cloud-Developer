@@ -1,0 +1,29 @@
+{
+  "Status": "SUCCESS",
+  "Reason": "See the details in CloudWatch Log Stream: 2025/06/21/[$LATEST]48d43bf6f4c84541b6dd96e07abd8b5e",
+  "PhysicalResourceId": "2025/06/21/[$LATEST]48d43bf6f4c84541b6dd96e07abd8b5e",
+  "StackId": "arn:aws:cloudformation:eu-west-2:<account-id>:stack/RunTask/d115ac70-4e89-11f0-824c-0af9f42065fb",
+  "RequestId": "048fd28b-9fbe-42fd-b0d6-78a5eb48b266",
+  "LogicalResourceId": "RunTaskCustomResource",
+  "NoEcho": false,
+  "Data": {
+    "tasks": [],
+    "failures": [
+      {
+        "arn": "arn:aws:ecs:eu-west-2:<account-id>:container-instance/0ab87abc6350481fa6c7a47fe11ccd28",
+        "reason": "ATTRIBUTE"
+      }
+    ],
+    "ResponseMetadata": {
+      "RequestId": "da99e301-8173-4a2c-ac9f-d58d1ac4430a",
+      "HTTPStatusCode": 200,
+      "HTTPHeaders": {
+        "x-amzn-requestid": "da99e301-8173-4a2c-ac9f-d58d1ac4430a",
+        "content-type": "application/x-amz-json-1.1",
+        "content-length": "143",
+        "date": "Sat, 21 Jun 2025 10:48:40 GMT"
+      },
+      "RetryAttempts": 0
+    }
+  }
+}
