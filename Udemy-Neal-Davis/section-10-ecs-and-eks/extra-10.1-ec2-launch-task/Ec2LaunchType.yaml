@@ -94,7 +94,7 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: NginxFamily
-      NetworkMode: bridge # awsvpc
+      NetworkMode: bridge # bridge, awsvpc. If you use awsvpc then the task will not have a public IP
       RequiresCompatibilities:
         - EC2
       RuntimePlatform:
@@ -113,6 +113,9 @@ Resources:
               Protocol: tcp
 
 Outputs:
+  PublicIp:
+    Description: The public IP address of the EC2 instance
+    Value: !GetAtt Instance.PublicIp
   ClusterName:
     Description: The name of the ECS cluster
     Value: !Ref Cluster

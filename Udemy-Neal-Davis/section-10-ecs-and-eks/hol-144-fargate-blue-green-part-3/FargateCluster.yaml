@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create an ECS cluster for Fargate Launch type and an ECS service
+
+Parameters:
+  # Important: The VPC and Subnets used here must be the same used in the TaskDefAndAlb stack in hol-143-fargate-blue-green-part-2
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The ID of the VPC where the ECS cluster will be created.
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: A list of subnet IDs where the ECS instances will be launched.
+
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: SimpleCluster
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+
+  EcsSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: EcsSecurityGroup
+      GroupDescription: Security group for ECS service
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allow inbound traffic from ALB security group
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !ImportValue TaskDefAndAlb-BalancerSecGroupId
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref Cluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition: !ImportValue TaskDefAndAlb-TaskDefinitionArn
+      SchedulingStrategy: REPLICA
+      DeploymentController:
+        Type: CODE_DEPLOY # ECS, CODE_DEPLOY, EXTERNAL
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED # DISABLED
+          SecurityGroups:
+            - !Ref EcsSecGroup
+          Subnets: !Ref SubnetIds
+      LoadBalancers:
+        - ContainerName: !ImportValue TaskDefAndAlb-ContainerName
+          ContainerPort: 80
+          TargetGroupArn: !ImportValue TaskDefAndAlb-TargetGroup80Arn
+
+Outputs:
+  LoadBalancerUrl:
+    Description: The URL of the load balancer for the ECS service.
+    Value: !ImportValue TaskDefAndAlb-LoadBalancerUrl

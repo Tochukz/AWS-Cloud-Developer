@@ -46,28 +46,42 @@ $ aws cloudformation deploy --template-file Ec2LaunchType.yaml --stack-name Ec2L
 ```
 
 **After deployment**
+1. Get the `TaskDefinitionArn` and `PublicIp` from the stack output
+```bash
+$ aws cloudformation describe-stacks --stack-name Ec2LaunchType --query "Stacks[0].Outputs" --no-cli-pager
+```
 
-1. Run a Task using the `RunTask` custom resource in the `RunTask` template
+2. Run a Task using the `RunTask` custom resource in the `RunTask` template
 
 ```bash
 $ aws cloudformation deploy --template-file RunTask.yaml --stack-name RunTask --capabilities CAPABILITY_NAMED_IAM
 ```
 
-2. Alternately, you can run a task using AWS CLI
+3. Alternately, you can run a task with AWS CLI using one of the command below:
 
 ```bash
+# for TaskDefinition.NetworkMode = bride
 $ aws ecs run-task --cluster SimpleCluster --task-definition NginxFamily:2 > output-2.json
+# for TaskDefinition.NetworkMode = awsvpc, --network-configuration is required
+$ aws ecs run-task --cluster SimpleCluster --task-definition NginxFamily:2 --network-configuration file://network-config.json > output-2.json
 ```
 
-For the task defintion parameter you can use `Family:revision` as the value or the full `TaskDefinitionArn`.
+For the task definition parameter you can use `Family:revision` as the value or the full `TaskDefinitionArn`. The `Family:revision` can be fond at the end of the `TaskDefinitionArn` string.  
 
 Note that you may not be able to run more than one tasks for the EC2 Instance of `t2.micro` because of the CPU and memory limitation.
 
-3. Confirm that the Task has been created
-   - Go the the ECS Console > Cluster > select the Cluster
-   - Click on the _Tasks_ tab to view all tasks.
+4. Confirm that the Task has been created
+```bash
+# Get the task ARN
+$ aws ecs list-tasks --cluster SimpleCluster --no-cli-pager
+$  aws ecs describe-tasks --cluster SimpleCluster --tasks <task-arn> > output-task.json
+```
+5. Search for the `privateIpv4Address` in `output-task.json` from the previous step.  
+   SSH into the ECS Container instance using the EC2 instance `PublicIp` and make a `curl` request against the private IP of the running task.  
+   You should get the Nginx Welcome page as a response for the `curl` request.
 
 **Testing**
+<!--todo: The Task created gets a public IP but the Public IP does not product the Nginx Welcome Page as expected.-->
 
 **Debug Error**
 
@@ -88,7 +102,15 @@ The `containerInstances.attributes` array shows what attribute the instance can 
 
 **Cleanup**
 
-To delete the stack
+Stop the stand-alone task
+
+```bash
+# Get the Task's ARN
+$ aws ecs list-tasks --cluster SimpleCluster
+# Stop the task
+$ aws ecs stop-task --cluster SimpleCluster --task <task-arn>  
+```
+Delete the stacks
 
 ```bash
 $ aws cloudformation delete-stack --stack-name RunTask
