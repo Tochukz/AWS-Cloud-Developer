@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create an ECS Cluster with an EC2 Launch Type and Register an EC2 Instance
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The ID of the VPC where the ECS cluster will be created.
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: A list of subnet IDs where the ECS instances will be launched.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: The name of the EC2 Key Pair to use for SSH access to the instances.
+    Default: DevSimpleKey
+  ContainerName:
+    Type: String
+    Description: The name of the container in the ECS task definition.
+    Default: NginxContainer
+    AllowedValues:
+      - NginxContainer
+
+Mappings:
+  # ECS Optimized AMIs. Go the EC2 Console > Images > AMI Catalog, search for "Amazon ECS-optimized Amazon Linux 2023 AMI" in the search bar.
+  # Click on the Community AMIs tab, and select the latest Amazon ECS-Optimized Amazon Linux 2023 (AL2023) AMI.
+  Images:
+    eu-west-1:
+      Ami: "" #
+    eu-west-2:
+      Ami: ami-040674feddbe27cb3 # Amazon Linux AMI 2023.0.20250618 x86_64 ECS HVM EBS
+    eu-west-3:
+      Ami: "" #
+    # These AMI are outdated but latest ones required subscription to AWS Marketplace
+
+Resources:
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: SimpleInstanceProfile
+      Roles:
+        - !Ref InstanceRole
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: SimpleCluster
+
+  EcsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: EcsSecurityGroup
+      GroupDescription: Allow SSH and HTTP traffic from anywhere
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allow SSH access from anywhere
+          IpProtocol: TCP
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - Description: Allow HTTP access from anywhere
+          IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [Images, !Ref "AWS::Region", Ami]
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds:
+        - !Ref EcsSecurityGroup
+      SubnetId: !Select [0, !Ref SubnetIds]
+      Tags:
+        - Key: Name
+          Value: SimpleInstance
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+
+          echo ECS_CLUSTER=${Cluster} >> /etc/ecs/ecs.config
+          # echo ECS_INSTANCE_ATTRIBUTES='{"instance-type":"t3.large"}' >> /etc/ecs/ecs.config
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: NginxFamily
+      NetworkMode: awsvpc # awsvpc, bridge
+      RequiresCompatibilities:
+        - EC2
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      Cpu: "128"
+      Memory: "256"
+      # ExecutionRoleArn: "" # not required for EC2
+      # TaskRoleArn: ""
+      ContainerDefinitions:
+        - Name: !Ref ContainerName
+          Image: nginx:latest
+          # Command: []
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: SimpleBalancer
+      Type: application
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      Subnets: !Ref SubnetIds
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: ip
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  EcsService:
+    Type: AWS::ECS::Service
+    DependsOn: Listener
+    Properties:
+      Cluster: !Ref Cluster
+      ServiceName: SimpleService
+      LaunchType: EC2
+      TaskDefinition: !Ref TaskDefinition
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1 # @todo - The deployment stalls if we set the DesiredCount to 2
+      LoadBalancers:
+        - TargetGroupArn: !Ref TargetGroup
+          ContainerName: !Ref ContainerName
+          ContainerPort: 80
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED #  AssignPublicIp is not supported for EC2 launch type
+          SecurityGroups:
+            - !Ref EcsSecurityGroup # Imported from the Network Stack, see the Network.yaml template
+          Subnets: !Ref SubnetIds
+
+  AutoScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AutoScalingRole
+      Description: Role for Scalable Target
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: application-autoscaling.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole
+
+  ScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 3
+      ResourceId: !Sub service/${Cluster}/${EcsService.Name} # Format: service/cluster-name/service-name.
+      RoleARN: !GetAtt AutoScalingRole.Arn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+Outputs:
+  PublicIp:
+    Description: The public IP address of the EC2 instance
+    Value: !GetAtt Instance.PublicIp
+  ClusterName:
+    Description: The name of the ECS cluster
+    Value: !Ref Cluster
+  TaskDefinitionArn:
+    Description: The ARN of the ECS task definition
+    Value: !Ref TaskDefinition
+  LoadBalancerUrl:
+    Description: DNS name for the Application Load Balancer
+    Value: !Sub http://${LoadBalancer.DNSName}
