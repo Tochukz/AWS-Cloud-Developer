@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Elastic Beanstalk Application
+
+# Note: This template is lifted from AWS-Solution-Architect/Udemy-Stephane-Maarek/section-11-classic-solution-architect/hands-on-127-beanstalk/BeanstalkApp.yaml
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket where Beanstalk data should be stored
+    Default: chucks-workspace-storage
+  CodeS3Key:
+    Type: String
+    Description: The S3 key for the application code
+    Default: beanstalk-artifacts/node-app-24-06.zip
+  KeyName:
+    Description: EC2 Keyname
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair
+    Default: DevSimpleKey
+  CNamePrefix:
+    Type: String
+    Description: A prefix for the Environment DNS name
+    Default: simple-demo
+
+Mappings:
+  SolutionStackNames:
+    NodeV22:
+      Value: "64bit Amazon Linux 2023 v6.4.1 running Node.js 22"
+    NodeV20:
+      Value: "64bit Amazon Linux 2023 v6.4.1 running Node.js 20"
+    NodeV18:
+      Value: "64bit Amazon Linux 2023 v6.4.1 running Node.js 18"
+  # See table of SolutionStackNames for different programming language support at https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html
+
+Resources:
+  App:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: NodeApp
+      Description: A demo node application
+
+  AppVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties:
+      ApplicationName: !Ref App
+      Description: A demo node application version
+      SourceBundle:
+        S3Bucket: !Ref BucketName
+        S3Key: !Ref CodeS3Key
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BeanstackAppRole
+      Description: Role for Elastic Beanstalk environment
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier # Optional
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: BeanstalkInstanceProfile
+      Roles:
+        - !Ref EC2InstanceRole
+
+  AppEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      ApplicationName: !Ref App
+      Description: A demo node application environment
+      EnvironmentName: SimpleNodeEnvironment
+      SolutionStackName: !FindInMap
+        - SolutionStackNames
+        - NodeV22
+        - Value
+      CNAMEPrefix: !Ref CNamePrefix
+      VersionLabel: !Ref AppVersion
+      Tier:
+        Name: WebServer # or Worker for worker tier
+        Type: Standard # or SQS/HTTP for worker tier
+      OptionSettings:
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: DisableIMDSv1 # Makes the resource use LaunchTemplate instead of LaunchConfiguration which has been depreated
+          Value: true
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value: !Ref EC2InstanceProfile
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: t2.micro
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: EC2KeyName
+          Value: !Ref KeyName
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: SingleInstance
+        - Namespace: aws:autoscaling:asg
+          OptionName: MinSize
+          Value: 1
+        - Namespace: aws:autoscaling:asg
+          OptionName: MaxSize
+          Value: 2
+      # See more configuration options here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options.html
+
+Outputs:
+  EnvironmentURL:
+    Description: Endpoint URL of the Elastic Beanstalk environment
+    Value: !Sub "http://${CNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
+  EnvironmentIP:
+    Description: Endpoint URL of the Elastic Beanstalk environment
+    Value: !GetAtt AppEnvironment.EndpointURL
+  ApplicationName:
+    Description: Name of the Elastic Beanstalk application
+    Value: !Ref App
+    Export:
+      Name: !Sub ${AWS::StackName}-ApplicationName
+  EnvironmentName:
+    Description: Name of the Elastic Beanstalk environment
+    Value: !Ref AppEnvironment
+    Export:
+      Name: !Sub ${AWS::StackName}-EnvironmentName
