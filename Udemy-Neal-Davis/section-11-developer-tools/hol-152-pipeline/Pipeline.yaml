@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ArtifactBucket:
+    Type: String
+    Description: S3 bucket to store pipeline artifacts
+    Default: chucks-workspace-storage
+  GitHubUser:
+    Type: String
+    Description: GitHub username
+    NoEcho: true
+    # Note that the GitHub Username is case sensitive
+  RepositoryName:
+    Type: String
+    Description: GitHub repository name
+    # Try to maintain the same case for your repo name
+  GitHubBranch:
+    Description: GitHub branch to trigger deployments
+    Type: String
+    Default: master
+  GitHubToken:
+    Type: String
+    Description: GitHub OAuth token with repo access
+    NoEcho: true # Hides the token in the console output
+    # You can generate a personal access token in GitHub following the steps described in hol-150-git-and-github
+
+Resources:
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DevOpsPipelineRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipelinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowAllForS3
+                Effect: Allow
+                Action: s3:*
+                Resource:
+                  - !Sub arn:aws:s3:::elasticbeanstalk-${AWS::Region}-${AWS::AccountId} # Bucket to be created for Elastic Beanstalk service
+                  - !Sub arn:aws:s3:::elasticbeanstalk-${AWS::Region}-${AWS::AccountId}/* # Bucket to be created for Elastic Beanstalk service
+              - Sid: AllowGeneralOperations
+                Effect: Allow
+                Action:
+                  - cloudformation:*
+                  - autoscaling:*
+                  - ec2:*
+                  - elasticbeanstalk:*
+                  - iam:PassRole
+                Resource: "*"
+              - Sid: AllowBucketAccess
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+                  - s3:PutObjectAcl
+                  - s3:PutObject
+                  - s3:CopyObject
+                Resource:
+                  - !Sub arn:aws:s3:::${ArtifactBucket}
+                  - !Sub arn:aws:s3:::${ArtifactBucket}/*
+
+  DeployPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: NodeDeployPipeline
+      # ExecutionMode: QUEUED # QUEUED | SUPERSEDED | PARALLEL
+      RoleArn: !GetAtt PipelineRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucket
+      # PipelineType: V1 # V1 | V2
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: GitHubSource
+              ActionTypeId:
+                Category: Source # Source | Build | Test | Deploy | Invoke | Approval | Compute
+                Owner: ThirdParty # AWS | ThirdParty | Custom
+                Provider: GitHub
+                Version: 1
+              Configuration:
+                Owner: !Ref GitHubUser
+                Repo: !Ref RepositoryName
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubToken
+              OutputArtifacts:
+                - Name: SourceArtifact
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: DeployToBeanstalk
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: ElasticBeanstalk
+                Version: 1
+              Configuration:
+                ApplicationName: !ImportValue BeanstalkApp-ApplicationName
+                EnvironmentName: !ImportValue BeanstalkApp-EnvironmentName
+              InputArtifacts:
+                - Name: SourceArtifact
+              RunOrder: 1
+
+Outputs:
+  PipelineURL:
+    Description: URL to access the CodePipeline console
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${DeployPipeline}/view
