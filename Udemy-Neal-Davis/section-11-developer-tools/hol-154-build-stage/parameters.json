@@ -8,7 +8,7 @@
     "ParameterValue": "repo-name"
   },
   {
-    "ParameterKey": "GitHubToken",
-    "ParameterValue": "my-github-token"
+    "ParameterKey": "GitHubConnectionArn",
+    "ParameterValue": "arn-of-github-connection"
   }
 ]
