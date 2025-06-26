@@ -12,7 +12,7 @@ Parameters:
   CodeS3Key:
     Type: String
     Description: The S3 key for the application code
-    Default: beanstalk-artifacts/node-app-24-06.zip
+    Default: beanstalk-artifacts/express-app-26-06.zip
   KeyName:
     Description: EC2 Keyname
     Type: AWS::EC2::KeyPair::KeyName

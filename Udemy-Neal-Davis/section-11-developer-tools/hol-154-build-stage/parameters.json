@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "GitHubUser",
+    "ParameterValue": "my-github-username"
+  },
+  {
+    "ParameterKey": "RepositoryName",
+    "ParameterValue": "repo-name"
+  },
+  {
+    "ParameterKey": "GitHubToken",
+    "ParameterValue": "my-github-token"
+  }
+]
