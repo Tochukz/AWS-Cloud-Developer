@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates ECR Repository
+
+Resources:
+  Respository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: nestjs-repos
+
+Outputs:
+  RepositoryUri:
+    Description: The URI of the ECR repository
+    Value: !GetAtt Respository.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}-RepositoryUri"

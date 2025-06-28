@@ -1,0 +1,9 @@
+version: 1
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "REPLACED_BY_CODEDEPLOY"
+        LoadBalancerInfo:
+          ContainerName: NestJSContainer
+          ContainerPort: 80

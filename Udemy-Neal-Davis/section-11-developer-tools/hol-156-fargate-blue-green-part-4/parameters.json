@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-1234567890"
+  },
+  {
+    "ParameterKey": "SubnetIds",
+    "ParameterValue": "subnet-x1234567,subnet-y1234567"
+  },
+  {
+    "ParameterKey": "GitHubUser",
+    "ParameterValue": "my-github-username"
+  },
+  {
+    "ParameterKey": "RepositoryName",
+    "ParameterValue": "repo-name"
+  },
+  {
+    "ParameterKey": "GitHubConnectionArn",
+    "ParameterValue": "arn-of-github-connection"
+  }
+]

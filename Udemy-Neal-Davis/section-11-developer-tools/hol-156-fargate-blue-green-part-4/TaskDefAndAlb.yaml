@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Task Definition and Application Load Balancer
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The ID of the VPC where the ECS cluster will be created.
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: A list of subnet IDs where the ECS instances will be launched.
+  ContainerName:
+    Type: String
+    Description: The name of the container in the task definition.
+    Default: NestJSContainer
+
+Resources:
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SimpleTaskExecRole
+      Description: Role for ECS Task Execustion
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: TaskExecRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowCreateLogGroup
+                Effect: Allow
+                Action: logs:CreateLogGroup
+                Resource: "*"
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: SimpleFamily
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256 # Fargate CPU as from 256
+      Memory: 512 # Fargate memoery as from 512
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      # TaskRoleArn: ""
+      ContainerDefinitions:
+        - Name: !Ref ContainerName
+          Essential: True
+          Image:
+            !Sub [
+              "${RepositoryUri}:latest",
+              { RepositoryUri: !ImportValue EcrRepository-RepositoryUri },
+            ]
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+              HostPort: 80
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-create-group: true
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: /aws/ecs/NestJs2706
+              awslogs-stream-prefix: "app-logs"
+          Environment:
+            - Name: PORT
+              Value: 80
+
+  BalancerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: BalancerSecGroup
+      GroupDescription: Allow HTTP traffic from anywhere
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allow HTTP traffic on port 80
+          IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - Description: Allow HTTP traffic on port 8080
+          IpProtocol: TCP
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: SimpleBalancer
+      Type: application
+      Scheme: internet-facing
+      Subnets: !Ref SubnetIds
+      SecurityGroups:
+        - !Ref BalancerSecGroup
+
+  TargetGroupBlue:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: BlueTargetGroup
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: ip
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+
+  TargetGroupGreen:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: GreenTargetGroup
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 8080
+      TargetType: ip
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+
+  ListenerBlue:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupBlue
+
+  ListenerGreen:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Protocol: HTTP
+      Port: 8080
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupGreen
+
+Outputs:
+  TaskExecutionRoleArn:
+    Description: Task execution role ARN
+    Value: !GetAtt TaskExecutionRole.Arn
+  TaskDefinitionArn:
+    Description: The ARN of the ECS Task Definition
+    Value: !Ref TaskDefinition
+    Export:
+      Name: !Sub ${AWS::StackName}-TaskDefinitionArn
+  LoadBalancerUrl:
+    Description: The URL of the Application Load Balancer
+    Value: !Sub http://${LoadBalancer.DNSName}
+    Export:
+      Name: !Sub ${AWS::StackName}-LoadBalancerUrl
+  BalancerSecGroupId:
+    Description: The security group ID for the Application Load Balancer
+    Value: !Ref BalancerSecGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-BalancerSecGroupId
+  ContainerName:
+    Description: The name of the container in the task definition
+    Value: !Ref ContainerName
+    Export:
+      Name: !Sub ${AWS::StackName}-ContainerName
+  ListenerBlueArn:
+    Description: ARN of the Blue listener
+    Value: !Ref ListenerBlue
+    Export:
+      Name: !Sub ${AWS::StackName}-ListenerBlueArn
+  ListenerGreenArn:
+    Description: ARN of the Green listener
+    Value: !Ref ListenerGreen
+    Export:
+      Name: !Sub ${AWS::StackName}-ListenerGreenArn
+  TargetGroupBlueName:
+    Description: The name of the blue target group
+    Value: !GetAtt TargetGroupBlue.TargetGroupName
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroupBlueName
+  TargetGroupGreenName:
+    Description: The name of the green target group
+    Value: !GetAtt TargetGroupGreen.TargetGroupName
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroupGreenName
+  TargetGroupBlueArn:
+    Description: The ARN of the blue target group
+    Value: !Ref TargetGroupBlue
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroupBlueArn
+  TargetGroupGreenArn:
+    Description: The ARN of the green group
+    Value: !Ref TargetGroupGreen
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroupGreenArn
