@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  KeyName:
+    Type: String
+    Description: KeyName of existing EC2 KeyPair
+    Default: DevSimpleKey
+
+Resources:
+  WebSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebSecGroup
+      GroupDescription: Security group for ECS instance
+      SecurityGroupIngress:
+        - Description: Allow SSH access from anywhere
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      KeyName: !Ref KeyName
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit  (x86),  for eu-west-2
+      SecurityGroupIds:
+        - !GetAtt WebSecGroup.GroupId
+      Tags:
+        - Key: Name
+          Value: SimpleInstance
+
+Outputs:
+  PublicIp:
+    Description: Public IP address for the EC2 instance
+    Value: !GetAtt Instance.PublicIp
