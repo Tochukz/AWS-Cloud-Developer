@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
+Description: This template configures an EC2 instance to use for demonstration of IMDS V2
 Parameters:
   KeyName:
     Type: String
@@ -7,6 +8,28 @@ Parameters:
     Default: DevSimpleKey
 
 Resources:
+  Ec2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SimpleEc2Role
+      Description: Role for EC2 instance
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+  Ec2Profile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: SimpleEc2Profile
+      Roles:
+        - !Ref Ec2Role
+
   WebSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -25,6 +48,7 @@ Resources:
       InstanceType: t3.micro
       KeyName: !Ref KeyName
       ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit  (x86),  for eu-west-2
+      IamInstanceProfile: !Ref Ec2Profile
       SecurityGroupIds:
         - !GetAtt WebSecGroup.GroupId
       Tags:
