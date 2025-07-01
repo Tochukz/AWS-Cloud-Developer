@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Create a CodePipeline with a Build Stage
+Description: Create a CodePipeline with a Build Stage that uses CodeBuild
 
 Parameters:
   ArtifactBucket:
@@ -137,10 +137,10 @@ Resources:
             build:
               commands:
                 - echo "Building application..."
-                - npm run build                
+                - npm run build
                 - npm ci --omit=dev
           artifacts:
-            files:     
+            files:
               - package.json
               - dist/**/*
               - node_modules/**/*
