@@ -20,7 +20,7 @@ $ aws elasticbeanstalk list-platform-versions --query "PlatformSummaryList[].{Ca
 Copy the ExpressJS application to S3 bucket
 
 ```bash
-$ ./deploy.sh
+$ ./deploy-express.sh
 ```
 
 **Deployment**  
@@ -44,7 +44,7 @@ $ aws cloudformation describe-stacks --stack-name EbCustomPlatform --query "Stac
 ```
 
 **Testing**  
-Use the `EnvironmentUrl` to access the application over a browser.
+Use the `EnvironmentUrl` or `EnvironmentIp` to access the application over a browser.
 
 **Debug Errors**
 

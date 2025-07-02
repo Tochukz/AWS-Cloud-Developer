@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Elastic Beanstalk Application with Custom Platform
+Description: Elastic Beanstalk Application with Configuration template
 
 Parameters:
   BucketName:
@@ -10,7 +10,7 @@ Parameters:
   CodeS3Key:
     Type: String
     Description: The S3 key for the application code
-    Default: beanstalk-artifacts/express-app-02-07.zip
+    Default: beanstalk-artifacts/express-app-03-07.zip
   KeyName:
     Description: EC2 Keyname
     Type: AWS::EC2::KeyPair::KeyName
@@ -24,8 +24,6 @@ Parameters:
     Type: String
     Description: Platform ARN
     Default: arn:aws:elasticbeanstalk:eu-west-2::platform/Node.js 22 running on 64bit Amazon Linux 2023/6.6.0
-    # To vew list of custom Platforms, run the list-platform-versions command:
-    # $ aws elasticbeanstalk list-platform-versions
 
 Resources:
   Application:
@@ -67,18 +65,12 @@ Resources:
       Roles:
         - !Ref EC2InstanceRole
 
-  Environment:
-    Type: AWS::ElasticBeanstalk::Environment
+  ConfigTemplate:
+    Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties:
-      EnvironmentName: SimpleNodeEnvironment
       ApplicationName: !Ref Application
-      Description: A demo node application environment
+      Description: Configuration template for NodeJS application
       PlatformArn: !Ref PlatformArn
-      CNAMEPrefix: !Ref CNamePrefix
-      VersionLabel: !Ref AppVersion
-      Tier:
-        Name: WebServer # or Worker for worker tier
-        Type: Standard # or SQS/HTTP for worker tier
       OptionSettings:
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: DisableIMDSv1 # Makes the resource use LaunchTemplate instead of LaunchConfiguration which has been depreated
@@ -94,7 +86,7 @@ Resources:
           Value: !Ref KeyName
         - Namespace: aws:elasticbeanstalk:environment
           OptionName: EnvironmentType
-          Value: SingleInstance # or LoadBalanced
+          Value: LoadBalanced # or SingleInstance
           # Use SingleInstance to get a single EC2 instance, Ideal for dev/test environments or
           # Use LoadBalanced for Auto Scaling group behind a load balancer, suitable for production and scalable environments.
         - Namespace: aws:autoscaling:asg
@@ -105,10 +97,23 @@ Resources:
           Value: 2
       # See more configuration options here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options.html
 
+  Environment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      EnvironmentName: SimpleNodeEnvironment
+      ApplicationName: !Ref Application
+      Description: A demo node application environment
+      CNAMEPrefix: !Ref CNamePrefix
+      VersionLabel: !Ref AppVersion
+      TemplateName: !Ref ConfigTemplate
+      Tier:
+        Name: WebServer # or Worker for worker tier
+        Type: Standard # or SQS/HTTP for worker tier
+
 Outputs:
   EnvironmentUrl:
     Description: Endpoint URL of the Elastic Beanstalk environment
     Value: !Sub "http://${CNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
-  EnvironmentIp:
-    Description: Public IP of Single ECS instance
+  AlbDomain:
+    Description: Domain name of the Application Load Balancer
     Value: !GetAtt Environment.EndpointURL
