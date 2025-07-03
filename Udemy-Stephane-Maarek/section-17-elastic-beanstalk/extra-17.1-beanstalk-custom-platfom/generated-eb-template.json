@@ -1081,7 +1081,7 @@
               }
             }
           },
-          "_LaunchS3URL": "https://elasticbeanstalk-eu-west-2.s3.eu-west-2.amazonaws.com/environments/4b41e861-c589-4188-ae2d-fca4793d0ff5/launch_control?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEPP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCWV1LXdlc3QtMiJGMEQCIFk6TRuTok749tV5SCd5RKOlOUJmJIedXGeQDecDnSr6AiB86zIB8UbSqi88kj9BnMqTiF32hO%2FeGCCyDn1GqHvTQSr0Agjs%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAQaDDQ4NzQ1NzczNjU5NyIMJDpJKT4sWTWsHEnuKsgChCMqV3pMKb5X%2FgE7hqoHTDsnx6gI4nP5AgWv%2FG2Uhehs3Kxk8gUWT%2BhvGV1LbbZDo1k8IfHMIhJKpc%2Fc0pUWnnE4UaS2%2BUGWIy2TuefmQj74uHYIZhQM4p6b%2FfC7MRH7RAmg33F5m9MhvmFsM%2FDSz1Z3FszYKWnO5ddKKb2HkFG9Y9RP9Qd6yMU8eWiFWdxU6wQo2d%2FQFazRolsSOfi1eLapqkFIhNd0o%2F0%2FISwjcZNtKigGxwK0u73SEvGAyW1McEiAjzJiU8hTuMXJj%2BMtMEHIssSHpdTXvBo3FHWaA43E0%2F1EtMEkO%2FncrdGdSAKUBqZ0A%2BZdP3KdZbexOnmqsCADKTMF2woUj1RH3Aj5W%2Bb26RT0JDINUEgAYKnUkTCnaZ2QbXLRjhJHj1oKiCvnE1B9mTcqKN7GrNFRdFQYG2mQBhPR6TCzQTD%2Fl5TDBjrAAWxKt0Pt1l42MxRlrlu2GF2M%2F1Vt7csSJyPHhju4EKFaWtWN%2FszfFzLvtQisFrhEbLnV%2BOqVQDZfc6loPYwg9WDy4EruBIIauH6CMLNKfJr6pXU5jofuBn2ZfdHkzTZ1GPdbKQwv9Azh9eSeXHZWY6b6uBBevDJsmYMC9p7HHHMVbm%2F6CEhRxxkqc3D%2FL%2FavhfSHv%2F6rx4DaoNzJb73Rxhf0RFKvsJIHm%2B0UGQivn5sNI9W8n4IkGYP%2FkI9tDy8Swg%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20250702T112917Z&X-Amz-SignedHeaders=host&X-Amz-Expires=43200&X-Amz-Credential=ASIAXC7V6Y6K3PMP5ARH%2F20250702%2Feu-west-2%2Fs3%2Faws4_request&X-Amz-Signature=2ab54e723cfd962d8e6f217df64e3386f6ea655430dbc035631813b7704e2f0b",
+          "_LaunchS3URL": "https://elasticbeanstalk-eu-west-2.s3.eu-west-2.amazonaws.com/environments/4b41e861-c589-4188-ae2d-fca4793d0ff5/launch_control?X-Amz-Security-Token=xxxxxxxxx",
           "_API": {
             "_Commands": {
               "CMD-TailLogs": {
