@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": "${aws:username}/*"
+        }
+      },
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::chucks-workspace-storage",
+      "Effect": "Allow",
+      "Sid": "AllowListBucket"
+    },
+    {
+      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Resource": "arn:aws:s3:::chucks-workspace-storage/${aws:username}/*",
+      "Effect": "Allow",
+      "Sid": "AllowGetPut"
+    }
+  ]
+}

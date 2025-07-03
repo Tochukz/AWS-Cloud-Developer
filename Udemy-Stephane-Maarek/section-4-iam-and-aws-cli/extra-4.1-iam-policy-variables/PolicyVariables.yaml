@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Uses policy variable to grant users access to their own folder in an S3 bucket
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name
+    Default: chucks-workspace-storage
+  Users:
+    Type: List<String>
+    Description: List of names of IAM users
+    Default: "john,peter"
+
+Resources:
+  PolicyWithVar:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: UserSpecificBucketAccess
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowListBucket
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${BucketName}
+            Condition:
+              StringLike:
+                s3:prefix: "${aws:username}/*"
+          - Sid: AllowGetPut
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub "arn:aws:s3:::${BucketName}/${!aws:username}/*" # Use escape syntax ! to prevent CloudFormation trying to substitute the policy variable
+      Users: !Ref Users
