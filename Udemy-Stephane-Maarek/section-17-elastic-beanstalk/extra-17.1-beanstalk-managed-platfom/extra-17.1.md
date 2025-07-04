@@ -1,11 +1,11 @@
-# Extra 17.1: Elastic Beanstalk Custom Platform
+# Extra 17.1: Elastic Beanstalk using Managed Platform
 
 ### Description
 
-In this configuration we create Elastic Beanstalk Environment using a Custom Platform.  
-When we use Custom platform for the `AWS::ElasticBeanstalk::Environment` resource, we set the `PlatformArn` and omit the `SolutionStackName` or set it to null.
+In this configuration we create Elastic Beanstalk Environment using a managed platform.  
+When we use managed platform for the `AWS::ElasticBeanstalk::Environment` resource, we set the `PlatformArn` and omit the `SolutionStackName` or set it to null.
 
-To view the list of custom platform available in a specific AWS region:
+To view the list of platforms available in a specific AWS region, do
 
 ```bash
 $  aws elasticbeanstalk list-platform-versions > output-platforms.json
@@ -27,20 +27,20 @@ $ ./deploy-express.sh
 Lint the templates
 
 ```bash
-$ cfn-lint EbCustomPlatform.yaml
+$ cfn-lint EbManagedPlatform.yaml
 ```
 
 Deploy the stack
 
 ```bash
-$ aws cloudformation deploy --template-file EbCustomPlatform.yaml  --stack-name EbCustomPlatform --capabilities CAPABILITY_NAMED_IAM
+$ aws cloudformation deploy --template-file EbManagedPlatform.yaml  --stack-name EbManagedPlatform --capabilities CAPABILITY_NAMED_IAM
 ```
 
 **After Deployment**  
 Get the `EnvironmentUrl` and `EnvironmentIp` from the stack outputs
 
 ```bash
-$ aws cloudformation describe-stacks --stack-name EbCustomPlatform --query "Stacks[0].Outputs" --no-cli-pager
+$ aws cloudformation describe-stacks --stack-name EbManagedPlatform --query "Stacks[0].Outputs" --no-cli-pager
 ```
 
 **Testing**  
@@ -52,5 +52,5 @@ Use the `EnvironmentUrl` or `EnvironmentIp` to access the application over a bro
 To delete the stacks
 
 ```bash
-$ aws cloudformation delete-stack --stack-name EbCustomPlatform
+$ aws cloudformation delete-stack --stack-name EbManagedPlatform
 ```

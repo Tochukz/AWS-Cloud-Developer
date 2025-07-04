@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Elastic Beanstalk Application with Custom Platform
+Description: Using the Immutable Deployment Policy for Elastic Beanstalk Application Update
 
 Parameters:
   BucketName:
@@ -10,7 +10,7 @@ Parameters:
   CodeS3Key:
     Type: String
     Description: The S3 key for the application code
-    Default: beanstalk-artifacts/express-app-02-07.zip
+    Default: beanstalk-artifacts/express-app-04-07-v1.zip
   KeyName:
     Description: EC2 Keyname
     Type: AWS::EC2::KeyPair::KeyName
@@ -94,21 +94,31 @@ Resources:
           Value: !Ref KeyName
         - Namespace: aws:elasticbeanstalk:environment
           OptionName: EnvironmentType
-          Value: SingleInstance # or LoadBalanced
+          Value: LoadBalanced # or SingleInstance
           # Use SingleInstance to get a single EC2 instance, Ideal for dev/test environments or
           # Use LoadBalanced for Auto Scaling group behind a load balancer, suitable for production and scalable environments.
         - Namespace: aws:autoscaling:asg
           OptionName: MinSize
-          Value: 1
+          Value: 2
         - Namespace: aws:autoscaling:asg
           OptionName: MaxSize
-          Value: 2
+          Value: 3
+        # - Namespace: aws:autoscaling:updatepolicy:rollingupdate
+        #   OptionName: RollingUpdateEnabled
+        #   Value: true
+        - Namespace: aws:elasticbeanstalk:command
+          OptionName: DeploymentPolicy
+          Value: Immutable # AllAtOnce | Rolling | RollingWithAdditionalBatch | Immutable | TrafficSplitting
       # See more configuration options here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options.html
+      # For general option see here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html
 
 Outputs:
+  InstanceProfileArn:
+    Description: ARN of the instance profile
+    Value: !GetAtt EC2InstanceProfile.Arn
   EnvironmentUrl:
     Description: Endpoint URL of the Elastic Beanstalk environment
     Value: !Sub "http://${CNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
-  EnvironmentIp:
+  AlbDomain:
     Description: Public IP of Single ECS instance
     Value: !GetAtt Environment.EndpointURL
