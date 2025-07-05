@@ -94,16 +94,33 @@ $ aws elasticbeanstalk swap-environment-cnames \
 9. Go back the ealier tab with the `EnvironmentUrl` and refresh the page. It should now serve the new version.
 10. Got back the the tab with the `CNAME` and refresh the page. It shoudl now serve the old code verson.
 
-11. Delete the new envionment.
+11. Terminate the old Beanstalk Envionment.
 
 ```bash
-$ aws the old elasticbeanstalk
+$ aws elasticbeanstalk terminate-environment --environment-name SimpleNodeEnvironment
 ```
 
 **Debug Errors**
 
-**Cleanup**  
-To delete the stacks
+**Cleanup**
+
+1. Terminate the new Beanstalk Environment
+
+```bash
+$ aws elasticbeanstalk terminate-environment --environment-name SimpleNodeEnvironment-v2
+```
+
+Wait for the Environment to be deleted before deleting the stack.
+
+2. Delete the verson
+
+```bash
+$ aws elasticbeanstalk delete-application-version --application-name NodeApp --version-label NodeApp-v2
+```
+
+Wait for the Version to be deleted before deleting the stack.
+
+3. To delete the stacks
 
 ```bash
 $ aws cloudformation delete-stack --stack-name DeploymentMode
