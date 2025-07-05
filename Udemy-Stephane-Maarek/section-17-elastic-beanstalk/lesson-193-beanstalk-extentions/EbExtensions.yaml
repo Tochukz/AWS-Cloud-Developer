@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configure Version Life Cycle for Beanstalk Application
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket where Beanstalk data should be stored
+    Default: chucks-workspace-storage
+  CodeS3Key:
+    Type: String
+    Description: The S3 key for the application code
+    Default: beanstalk-artifacts/express-app-05-07.zip
+  KeyName:
+    Description: EC2 Keyname
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair
+    Default: DevSimpleKey
+  CNamePrefix:
+    Type: String
+    Description: A prefix for the Environment DNS name
+    Default: simple-demo
+  PlatformArn:
+    Type: String
+    Description: Platform ARN
+    Default: "arn:aws:elasticbeanstalk:eu-west-2::platform/Node.js 22 running on 64bit Amazon Linux 2023/6.6.0"
+    # To vew list of custom Platforms, run the list-platform-versions command:
+    # $ aws elasticbeanstalk list-platform-versions
+
+Resources:
+  ApplicationServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BeanstalkApplicationRole
+      Description: Role for Beanstalk application
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: elasticbeanstalk.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService # To be deprecated soon
+        # - arn:aws:iam::aws:policy/AWSElasticBeanstalkEnhancedHealth
+        # - arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy
+
+  Application:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: NodeApp
+      Description: A demo node application
+      ResourceLifecycleConfig:
+        ServiceRole: !GetAtt ApplicationServiceRole.Arn
+        VersionLifecycleConfig:
+          MaxAgeRule:
+            DeleteSourceFromS3: false
+            Enabled: false
+            MaxAgeInDays: 14
+          MaxCountRule: # 'MaxAgeRule' and 'MaxCountRule' cannot be enabled simultaneously.
+            DeleteSourceFromS3: false
+            Enabled: true
+            MaxCount: 5
+
+  AppVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties:
+      ApplicationName: !Ref Application
+      Description: A demo node application version
+      SourceBundle:
+        S3Bucket: !Ref BucketName
+        S3Key: !Ref CodeS3Key
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BeanstackAppRole
+      Description: Role for Elastic Beanstalk environment
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier # Optional
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: BeanstalkInstanceProfile
+      Roles:
+        - !Ref EC2InstanceRole
+
+  Environment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      EnvironmentName: SimpleNodeEnvironment
+      ApplicationName: !Ref Application
+      Description: A demo node application environment
+      PlatformArn: !Ref PlatformArn
+      CNAMEPrefix: !Ref CNamePrefix
+      VersionLabel: !Ref AppVersion
+      Tier:
+        Name: WebServer # or Worker for worker tier
+        Type: Standard # or SQS/HTTP for worker tier
+      OptionSettings:
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: DisableIMDSv1 # Makes the resource use LaunchTemplate instead of LaunchConfiguration which has been depreated
+          Value: true
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value: !Ref EC2InstanceProfile
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: t2.micro
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: EC2KeyName
+          Value: !Ref KeyName
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: SingleInstance # SingleInstance | LoadBalanced
+          # Use SingleInstance to get a single EC2 instance, Ideal for dev/test environments or
+          # Use LoadBalanced for Auto Scaling group behind a load balancer, suitable for production and scalable environments.
+        - Namespace: aws:autoscaling:asg
+          OptionName: MinSize
+          Value: 2
+        - Namespace: aws:autoscaling:asg
+          OptionName: MaxSize
+          Value: 3
+      # See more configuration options here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options.html
+      # For general option see here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html
+
+Outputs:
+  EnvironmentUrl:
+    Description: Endpoint URL of the Elastic Beanstalk environment
+    Value: !Sub "http://${CNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
+  PublicIp:
+    Description: Public IP of Single ECS instance
+    Value: !GetAtt Environment.EndpointURL
