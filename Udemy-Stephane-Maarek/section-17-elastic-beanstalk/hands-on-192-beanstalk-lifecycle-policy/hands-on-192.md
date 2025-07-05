@@ -9,6 +9,10 @@ _VersionLifeCycleConfig_ also give us the option of deleting the associated code
 
 ### Operation
 
+**Before Deployment**   
+Note that the demonstration uses application code that has already been pushed to S3 bucket by `hands-on-190-beanstalk-deployment-modes`.  
+This code is represented by the object key `beanstalk-artifacts/express-app-04-07-v1.zip`.
+
 **Deployment**  
 Lint the templates
 

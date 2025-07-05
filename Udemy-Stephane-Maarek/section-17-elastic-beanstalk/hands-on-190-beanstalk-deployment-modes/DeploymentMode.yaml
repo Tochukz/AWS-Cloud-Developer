@@ -23,7 +23,7 @@ Parameters:
   PlatformArn:
     Type: String
     Description: Platform ARN
-    Default: arn:aws:elasticbeanstalk:eu-west-2::platform/Node.js 22 running on 64bit Amazon Linux 2023/6.6.0
+    Default: "arn:aws:elasticbeanstalk:eu-west-2::platform/Node.js 22 running on 64bit Amazon Linux 2023/6.6.0"
     # To vew list of custom Platforms, run the list-platform-versions command:
     # $ aws elasticbeanstalk list-platform-versions
 
@@ -120,5 +120,5 @@ Outputs:
     Description: Endpoint URL of the Elastic Beanstalk environment
     Value: !Sub "http://${CNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
   AlbDomain:
-    Description: Public IP of Single ECS instance
+    Description: Domain Name of the Application Load Balancer
     Value: !GetAtt Environment.EndpointURL

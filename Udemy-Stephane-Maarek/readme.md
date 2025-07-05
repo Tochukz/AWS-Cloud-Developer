@@ -22,9 +22,13 @@ __Content__
 
 Section | Pg  | Title
 --------|-----|--
-1       |     | Course Introduction
+1       |  6  | Course Introduction
 2       |     | Code & Slides Download
-3       |     | Getting started with AWS
-4       |     | IAM and AWS CLI
+3       | 11  | Getting started with AWS
+4       | 21  | IAM and AWS CLI
+5       | 39  | EC2 Fundamental
+6       | 74  | EC2 Instance Storage
+7       |  97 | AWS Fundamentals: ELB + ASG
 12      | 241 | AWS CLI, SDK, IAM Roles & Policies
-16      | 319 | ECS, ECR and Fargate 
+16      | 319 | ECS, ECR and Fargate
+17      | 361 | AWS Elastic Beanstalk
