@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates a CodeBuild project
+
+Parameters:
+  GitHubConnectionArn:
+    Type: String
+    Description: GitHub OAuth token with repo access
+  GitHubUser:
+    Type: String
+    Description: GitHub username
+    NoEcho: true
+    # Note that the GitHub Username is case sensitive
+  RepositoryName:
+    Type: String
+    Description: GitHub repository name
+    # Try to maintain the same case for your repo name
+  ArtifactBucket:
+    Type: String
+    Description: S3 bucket for the artifacts
+    Default: chucks-workspace-storage
+
+Resources:
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CodeBuildRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildBasicPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowPassRole
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: "*"
+              - Sid: AllowCodeStar
+                Effect: Allow
+                Action:
+                  - codeconnections:*
+                  - codestar-connections:*
+                Resource: !Ref GitHubConnectionArn
+              - Sid: AllowLogging
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - elasticbeanstalk:*
+                  - codebuild:*
+                Resource: "*"
+              - Sid: AllowBucketAccess
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                Resource:
+                  - !Sub arn:aws:s3:::${ArtifactBucket}
+                  - !Sub arn:aws:s3:::${ArtifactBucket}/*
+
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: NodeJSBuild
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source:
+        Type: GITHUB
+        Auth:
+          Type: CODECONNECTIONS
+          Resource: !Ref GitHubConnectionArn
+        Location: !Sub https://github.com/${GitHubUser}/${RepositoryName}
+      Artifacts:
+        Type: S3 # S3 | NO_ARTIFACTS
+        Packaging: ZIP
+        NamespaceType: BUILD_ID
+        # ArtifactIdentifier: simple-artifact
+        Name: demo-build.zip
+        Path: codebuild-artifacts
+        Location: !Ref ArtifactBucket
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+        # To get a list of images run: aws codebuild list-curated-environment-images
+      TimeoutInMinutes: 5
+      Triggers:
+        Webhook: true
+        BuildType: BUILD # BUILD | BUILD_BATCH
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH,PULL_REQUEST_CREATED # PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED
+            - Type: HEAD_REF
+              Pattern: ^refs/heads/master$
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Sub "/aws/codebuild/${AWS::StackName}Demo"
+          StreamName: "build-log"
