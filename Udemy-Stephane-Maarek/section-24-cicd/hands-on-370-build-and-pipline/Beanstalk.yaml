@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates two Elastic Beanstalk environment for development and production
+
+Parameters:
+  ProdCNamePrefix:
+    Type: String
+    Description: A prefix for the Environment DNS name
+    Default: prod-demo-09
+  DevCNamePrefix:
+    Type: String
+    Description: A prefix for the Environment DNS name
+    Default: dev-demo-09
+  PlatformArn:
+    Type: String
+    Description: Platform ARN
+    Default: "arn:aws:elasticbeanstalk:eu-west-2::platform/Node.js 22 running on 64bit Amazon Linux 2023/6.6.0"
+    # To vew list of custom Platforms, run the list-platform-versions command:
+    # $ aws elasticbeanstalk list-platform-versions
+
+Resources:
+  Application:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: NodeApp
+      Description: A demo node application
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BeanstackAppRole
+      Description: Role for Elastic Beanstalk environment
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier # Optional
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: BeanstalkInstanceProfile
+      Roles:
+        - !Ref EC2InstanceRole
+
+  DevEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      EnvironmentName: SimpleNodeDevEnv
+      ApplicationName: !Ref Application
+      Description: A demo node application development environment
+      PlatformArn: !Ref PlatformArn
+      CNAMEPrefix: !Ref DevCNamePrefix
+      Tier:
+        Name: WebServer # or Worker for worker tier
+        Type: Standard # or SQS/HTTP for worker tier
+      OptionSettings:
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: DisableIMDSv1 # Makes the resource use LaunchTemplate instead of LaunchConfiguration which has been depreated
+          Value: true
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value: !Ref EC2InstanceProfile
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: t2.micro
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: SingleInstance # or SingleInstance | LoadBalanced
+      # See more configuration options here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options.html
+
+  ProdEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      EnvironmentName: SimpleNodeProdEnv
+      ApplicationName: !Ref Application
+      Description: A demo node application production environment
+      PlatformArn: !Ref PlatformArn
+      CNAMEPrefix: !Ref ProdCNamePrefix
+      Tier:
+        Name: WebServer
+        Type: Standard
+      OptionSettings:
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: DisableIMDSv1
+          Value: true
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value: !Ref EC2InstanceProfile
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: t2.micro
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: SingleInstance # or SingleInstance | LoadBalanced
+
+Outputs:
+  DevEnvironmentUrl:
+    Description: Endpoint URL of the Elastic Beanstalk development environment
+    Value: !Sub "http://${DevCNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
+  DevPublicIp:
+    Description: Public IP of Single ECS instance in development environment
+    Value: !GetAtt DevEnvironment.EndpointURL
+  ProdEnvironmentUrl:
+    Description: Endpoint URL of the Elastic Beanstalk production environment
+    Value: !Sub "http://${ProdCNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
+  ProdPublicIp:
+    Description: Public IP of Single ECS instance in production environment
+    Value: !GetAtt ProdEnvironment.EndpointURL
+  ApplicationName:
+    Description: Name of the Elastic Beanstalk application
+    Value: !Ref Application
+    Export:
+      Name: !Sub ${AWS::StackName}-ApplicationName
+  DevEnvironmentName:
+    Description: Name of the Elastic Beanstalk development environment
+    Value: !Ref DevEnvironment
+    Export:
+      Name: !Sub ${AWS::StackName}-DevEnvironmentName
+  ProdEnvironmentName:
+    Description: Name of the Elastic Beanstalk production environment
+    Value: !Ref ProdEnvironment
+    Export:
+      Name: !Sub ${AWS::StackName}-ProdEnvironmentName

@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
+    commands:
+      - echo "Installing dependencies"
+      - npm install
+  pre_build:
+    commands:
+      - echo "Running tests"
+      - npm run test:cov
+  build:
+    commands:
+      - echo "Building the project"
+      - npm run build
+  post_build:
+    commands:
+      - echo "we are in the post build phase"
+
+artifacts:
+  files:
+    - '**/*'
+  exclude-paths:
+    - 'src/**'
+    - 'coverage/**'
+    - '.git/**'
+    - 'test/**'
+  name: build-artifact.zip
