@@ -32,3 +32,5 @@ Section | Pg  | Title
 12      | 241 | AWS CLI, SDK, IAM Roles & Policies
 16      | 319 | ECS, ECR and Fargate
 17      | 361 | AWS Elastic Beanstalk
+18      | 386 | AWS CloudFormation
+24      | 708 | AWS CICD

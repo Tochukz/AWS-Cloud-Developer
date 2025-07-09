@@ -177,8 +177,13 @@ The “Transform” header indicates it’s a SAM template:
 
 There are several resources types:
 * `AWS::Serverless::Function` (AWS Lambda)
-* `AWS::Serverless::Api` (API Gateway)
+* `AWS::Serverless::Api` (API Gateway Rest API)
 * `AWS::Serverless::SimpleTable` (DynamoDB)
 * `AWS::Serverless::Application` (AWS Serverless Application Repository)
 * `AWS::Serverless::HttpApi` (API Gateway HTTP API)
 * `AWS::Serverless::LayerVersion` (Lambda layers)
+* `AWS::Serverless::Connector` (Permission - IAM Managed Policy, SNS Topic Policy, SQS Queue Policy or Lambda Permission)
+* `AWS::Serverless::GraphQLApi` (AppSync GraphQL API)
+* `AWS::Serverless::StateMachine` (Step Functions state machine)
+
+To learn more about each resource type see [AWS SAM resources and properties](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-resources-and-properties.html)

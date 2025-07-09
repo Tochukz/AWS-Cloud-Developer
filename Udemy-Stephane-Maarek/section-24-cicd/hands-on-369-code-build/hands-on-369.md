@@ -37,6 +37,7 @@ $ aws cloudformation deploy --template-file CodeBuild.yaml  --stack-name CodeBui
 3. Copy the artifact file and unzip it to view the built code.
 4. Update the Git repos code locally, commit and push to the remote repo.
 5. This should trigger the build to start running.
+6. You can also look at the CloudWatch logs.
 
 **Debug Errors**
 

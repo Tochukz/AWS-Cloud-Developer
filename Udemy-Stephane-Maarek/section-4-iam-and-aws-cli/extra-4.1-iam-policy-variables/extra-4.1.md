@@ -4,8 +4,13 @@
 
 This configuration demonstrates the use of _IAM policy variables_ to create an IAM policy.  
 Here we write an IAM policy that grants IAM users access to their own folders in an Amazon S3 Bucket.  
-This means that a user such as John will have access to `s3://bucket-name/john` only, and another user, Peter, have access to `s3://bucker-name/peter` only.  
-We use the `${aws:username}` policy variable to achieve this.
+This means that a user such as John will have access to `s3://bucket-name/john` only, and another user, Peter, have access to `s3://bucker-name/peter` only.
+
+We use the `${aws:username}` policy variable to achieve this.  
+Other policy variables that can use used includes:
+
+1. xxxxx
+2. xxxxx
 
 ### Operation
 
@@ -70,3 +75,6 @@ To delete the stacks
 ```bash
 $ aws cloudformation delete-stack --stack-name PolicyVariables
 ```
+
+**Learn more**.
+[IAM policy elements: Variables and tags](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_variables.html).

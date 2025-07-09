@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 
+Description: CodePipline to deploy code from GitHub source to Elastic Beanstalk environment
+
 Parameters:
   ArtifactBucket:
     Type: String
