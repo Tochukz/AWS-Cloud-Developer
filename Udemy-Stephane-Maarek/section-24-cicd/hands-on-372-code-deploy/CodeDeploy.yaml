@@ -1,0 +1,150 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Integrates CodeBuild into CodePipeline
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Default: DevSimpleKey
+  ArtifactBucket:
+    Type: String
+    Description: S3 bucket name to store CodeDeploy artifacts
+    Default: chucks-workspace-storage
+  ArtifactObjectKey:
+    Type: String
+    Description: S3 object key for the CodeDeploy artifacts
+    Default: codedeploy-artifacts/deployment-01.zip
+
+Mappings:
+  Images: # Amazon Linux 2023 AMI 64-bit (x86), uefi-preferred
+    eu-west-1:
+      Ami: ami-0720a3ca2735bf2fa
+    eu-west-2:
+      Ami: ami-04ba8620fc44e2264
+    eu-west-3:
+      Ami: ami-0960d166ab83fd695
+
+Resources:
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CodeDeployEc2Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codedeploy.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+
+  Ec2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CodeDeployEc2InstanceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        # - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        # - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForEC2
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: CodeDeployEc2InstanceProfile
+      Roles:
+        - !Ref Ec2Role
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: CodeDeploySecurityGroup
+      GroupDescription: CodeDeploy Security Group
+      SecurityGroupIngress:
+        - Description: Allow SSH access from anywhere
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - Description: Allow HTTP access from anywhere
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !FindInMap [Images, !Ref AWS::Region, Ami]
+      IamInstanceProfile: !Ref InstanceProfile
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !GetAtt SecurityGroup.GroupId
+      Tags:
+        - Key: Environment
+          Value: Development
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+
+          # Install httpd server
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+
+          # Install CodeDeploy Agent
+          sudo yum update
+          sudo yum install ruby -y
+
+          # Download the agent
+          region=${AWS::Region}
+          wget https://aws-codedeploy-$region.s3.$region.amazonaws.com/latest/install
+          chmod +x ./install
+          sudo ./install auto
+          sudo service codedeploy-agent status
+
+  DeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: Ec2DeploymentApp
+      ComputePlatform: Server # Server | Lambda | ECS | Kubernetes
+
+  DevDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    DependsOn:
+      - Ec2Instance
+    Properties:
+      ApplicationName: !Ref DeployApplication
+      DeploymentGroupName: DevEc2DeploymentGroup
+      ServiceRoleArn: !GetAtt DeployRole.Arn
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce # CodeDeployDefault.AllAtOnce | CodeDeployDefault.HalfAtATime | CodeDeployDefault.OneAtATime
+      DeploymentStyle:
+        DeploymentType: IN_PLACE # BLUE_GREEN | IN_PLACE
+        DeploymentOption: WITHOUT_TRAFFIC_CONTROL # WITH_TRAFFIC_CONTROL | WITHOUT_TRAFFIC_CONTROL
+      Deployment:
+        Description: Initial deployment
+        Revision:
+          RevisionType: S3
+          S3Location:
+            Bucket: !Ref ArtifactBucket
+            Key: !Ref ArtifactObjectKey
+            BundleType: zip
+      Ec2TagFilters:
+        - Key: Environment
+          Value: Development
+          Type: KEY_AND_VALUE # KEY_ONLY | VALUE_ONLY | KEY_AND_VALUE
+
+Outputs:
+  PublicIp:
+    Description: Public IP of the EC2 instance
+    Value: !GetAtt Ec2Instance.PublicIp
