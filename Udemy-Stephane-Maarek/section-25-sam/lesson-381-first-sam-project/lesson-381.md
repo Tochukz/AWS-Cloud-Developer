@@ -37,6 +37,8 @@ You can go to the Lambda Console to test the Lambda
 **Debug Errors**
 
 **Cleanup**  
+You may want to leave the template for a continuation on `lesson-383-sam-api-gateway` which build on this.  
+
 To delete the stack
 
 ```bash

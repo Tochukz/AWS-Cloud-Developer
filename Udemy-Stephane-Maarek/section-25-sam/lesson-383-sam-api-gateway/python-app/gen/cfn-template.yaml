@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A starter AWS Lambda function.
+Resources:
+  HelloworldPython3:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      CodeUri: s3://chucks-workspace-storage/5c0a81fb38a8309acc72fa8e8dcf4a9c
+      Description: A starter AWS Lambda function.
+      MemorySize: 128
+      Timeout: 3
+      Events:
+        HelloSamApi:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: GET
