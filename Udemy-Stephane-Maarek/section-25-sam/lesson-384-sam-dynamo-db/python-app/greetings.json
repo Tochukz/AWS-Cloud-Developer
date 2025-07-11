@@ -1,0 +1,22 @@
+{
+  "GreetingsTable": [
+    {
+      "PutRequest": {
+        "Item": {
+          "greeting": {
+            "S": "Hello"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "greeting": {
+            "S": "Bonjour"
+          }
+        }
+      }
+    }
+  ]
+}

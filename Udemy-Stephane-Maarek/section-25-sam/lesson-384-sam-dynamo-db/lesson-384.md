@@ -1,9 +1,9 @@
-# Lesson 383: SAM API Gateway
+# Lesson 384: SAM DynamoDB
 
 ### Description
 
-This example is a continuation of `lesson-381-first-sam-project` where we will deploy a simple Python Application on a Lambda function using AWS SAM.  
-Here we added an API Gateway to the SAM template.
+This example is a continuation of `lesson-383-sam-api-gateway` where we will deploy a Lambda function with an API Gateway using the Serverless Application Model (SAM).
+Here we added an DynamoDB table to the application. The Lambda function will interact with the DynamoDB table to store and retrieve data.
 
 ### Operation
 
@@ -30,6 +30,11 @@ $ aws cloudformation deploy --template-file gen/cfn-template.yaml --stack-name H
 ```
 
 **After Deployment**
+Insert a collection items into the DynamoDB table using the `greetings.json` file.
+
+```bash
+$ aws dynamodb batch-write-item --request-items file://greetings.json
+```
 
 **Testing**  
 You can go to the API Gateway Console to test the API Gateway.  
@@ -40,7 +45,6 @@ e.g https://d9wo0365r6.execute-api.eu-west-2.amazonaws.com/Prod/hello
 **Debug Errors**
 
 **Cleanup**  
-You may want to leave the template for a continuation on `lesson-384-sam-dynamo-db` which build on this.  
 To delete the stack
 
 ```bash

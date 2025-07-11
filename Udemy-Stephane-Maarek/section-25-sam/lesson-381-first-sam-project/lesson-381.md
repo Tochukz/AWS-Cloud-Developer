@@ -1,4 +1,5 @@
-# Lesson 381: First SAM Project + Lesson 382: Deploying SAM PROJECT
+# Lesson 381: First SAM Project +
+# Lesson 382: Deploying SAM PROJECT
 
 ### Description
 
