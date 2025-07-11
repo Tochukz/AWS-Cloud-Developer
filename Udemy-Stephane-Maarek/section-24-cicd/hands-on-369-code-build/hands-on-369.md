@@ -9,11 +9,12 @@ After the build is complete, the build artifact is stored in a S3 bucket and can
 ### Operation
 
 **Before Deployment**
-This template uses an existing GitHub Connection ARN for it's `GitHubConnectionArn` parameter in the `CodePipeline` stack.  
+This template uses an existing GitHub Connection ARN for it's `GitHubConnectionArn` parameter in the `CodeBuild` stack.  
 See `Udemy-Neal-Davis/section-11-developer-tools/hol-154-build-stage/hol-154.md` on how to create a GitHub Connection.
 
-A NestJS application in a GitHub repository is used for this demonstration.
-This GitHub repo contains in `buildspec.yml` file in the root of the project directory. A copy of the `buildspec.yml` file is also included in here.
+A NestJS application in a GitHub repository (`nest-app-07-07`) is used for this demonstration.
+This GitHub repo contains a `buildspec.yml` file in the root of the project directory.   
+A copy of the `buildspec.yml` file is also included in here.
 
 **Deployment**  
 Lint the templates

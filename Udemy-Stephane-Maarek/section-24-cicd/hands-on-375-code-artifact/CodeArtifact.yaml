@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+# Parameters:
+#   Environment:
+#     Type: String
+#     Description: Environment for the repository (e.g., dev, prod)
+
+Resources:
+  ArtifactDomain:
+    Type: "AWS::CodeArtifact::Domain"
+    Properties:
+      DomainName: chucks-company
+
+  ArtifactRepository:
+    Type: AWS::CodeArtifact::Repository
+    Properties:
+      RepositoryName: DemoRepository
+      Description: Repository for storing artifacts
+      DomainName: !GetAtt ArtifactDomain.Name
+      DomainOwner: !Ref AWS::AccountId
+      # Upstreams:
+      #   - RepositoryName: npm-store
+      ExternalConnections:
+        - public:npmjs
