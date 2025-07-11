@@ -1,4 +1,4 @@
-# Lesson 369: CodeBuild - Part 1 Hands On
+# Lesson 370: CodeBuild - Part 2 - Hands On
 
 ### Description
 

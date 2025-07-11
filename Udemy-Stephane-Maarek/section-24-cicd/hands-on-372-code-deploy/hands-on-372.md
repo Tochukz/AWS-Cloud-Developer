@@ -1,8 +1,8 @@
-# Lesson 369: CodeBuild - Part 1 Hands On
+# Lesson 372: Code Deploy - Hands On
 
 ### Description
 
-This example demonstrates how to setup CodeDeploy to deploy an archived artifact from S3 to an EC2 instance running an Apache web server.
+This example demonstrates how to setup CodeDeploy to deploy a zip archived from  a S3 bucket to an EC2 instance running an Apache web server.  
 
 ### Operation
 

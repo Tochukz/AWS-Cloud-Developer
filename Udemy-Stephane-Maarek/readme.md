@@ -34,3 +34,4 @@ Section | Pg  | Title
 17      | 361 | AWS Elastic Beanstalk
 18      | 386 | AWS CloudFormation
 24      | 708 | AWS CICD
+25      | 746 | Serverless Application Model

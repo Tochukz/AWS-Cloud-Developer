@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "codeartifact:DescribePackageVersion",
+      "codeartifact:DescribeRepository",
+      "codeartifact:GetPackageVersionReadme",
+      "codeartifact:GetRepositoryEndpoint",
+      "codeartifact:ListPackages",
+      "codeartifact:ListPackageVersions",
+      "codeartifact:ListPackageVersionAssets",
+      "codeartifact:ListPackageVersionDependencies",
+      "codeartifact:ReadFromRepository",
+    ],
+    "Principal": {
+      "AWS": [
+        "arn:aws:iam::123456789:root",
+        "arn:aws:iam::109876543:user/bob"
+      ]
+    },
+    "Resource": "*"
+  }]
+}
