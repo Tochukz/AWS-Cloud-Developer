@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create a StackSet to deploy resources across multiple regions
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name for CloudFormation templates
+    Default: chucks-workspace-storage
+  TemplateKey:
+    Type: String
+    Description: Environment for the StackSet
+    Default: templates/SimpleStack.yaml
+
+Resources:
+  # In the case of multi-account deployment, this role must be created in the management account
+  AdministrationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSCloudFormationStackSetAdministrationRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess # Or scoped policy
+
+  # For multi-account deployment, this role must be created in the target accounts
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSCloudFormationStackSetExecutionRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt AdministrationRole.Arn
+              # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AdministrationRoleName}"
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess # Or scoped policy
+
+  SimpleStackSet:
+    Type: AWS::CloudFormation::StackSet
+    Properties:
+      StackSetName: SimpleSet
+      Description: Deploys resources to multiple regions
+      PermissionModel: SELF_MANAGED # SELF_MANAGED | SERVICE_MANAGED
+      AdministrationRoleARN: !GetAtt AdministrationRole.Arn
+      ExecutionRoleName: !Ref ExecutionRole
+      Capabilities:
+        - CAPABILITY_NAMED_IAM
+      Parameters:
+        - ParameterKey: NodeEnv
+          ParameterValue: staging
+        - ParameterKey: Stage
+          ParameterValue: Uat
+      TemplateURL: !Sub https://${BucketName}.s3.amazonaws.com/${TemplateKey}
+      StackInstancesGroup:
+        - DeploymentTargets:
+            Accounts:
+              - !Ref AWS::AccountId
+          Regions:
+            - eu-west-3
+          ParameterOverrides:
+            - ParameterKey: NodeEnv
+              ParameterValue: development
+            - ParameterKey: Stage
+              ParameterValue: Dev
+        - DeploymentTargets:
+            Accounts:
+              - !Ref AWS::AccountId
+          Regions:
+            - eu-west-1
+            - eu-west-2
+          ParameterOverrides:
+            - ParameterKey: NodeEnv
+              ParameterValue: production
+            - ParameterKey: Stage
+              ParameterValue: Prod

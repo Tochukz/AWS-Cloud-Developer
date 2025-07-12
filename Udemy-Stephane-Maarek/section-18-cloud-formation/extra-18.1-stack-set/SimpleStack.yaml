@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create S3 Bucket and Lambda Function for Stack Set Demonstration
+
+Parameters:
+  NodeEnv:
+    Type: String
+    Description: Environment for the Lambda function
+    Default: development
+  Stage:
+    Type: String
+    Description: Deployment stage for the Lambda function
+    Default: Dev
+
+Mappings:
+  Suffixes:
+    eu-west-1:
+      Suffix: EuWest1
+    eu-west-2:
+      Suffix: EuWest2
+    eu-west-3:
+      Suffix: EuWest3
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub simple-bucket-1207-${AWS::Region}
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        !Sub [
+          "LambdaRole${Suffix}",
+          { Suffix: !FindInMap [Suffixes, !Ref AWS::Region, Suffix] },
+        ]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName:
+        !Sub [
+          "SimpleLambda${Suffix}",
+          { Suffix: !FindInMap [Suffixes, !Ref AWS::Region, Suffix] },
+        ]
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: nodejs20.x
+      Environment:
+        Variables:
+          NODE_ENV: !Ref NodeEnv
+          STAGE: !Ref Stage
+      Timeout: 10
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log("Event: ", event);
+            return { statusCode: 200, body: "Hello from Lambda!" };
+          };
+
+Outputs:
+  BucketDomainName:
+    Description: Domain Name of the S3 Bucket
+    Value: !GetAtt Bucket.DomainName
+  LambdaFunctionArn:
+    Description: Name of the Lambda Function ARN
+    Value: !GetAtt LambdaFunction.Arn
+  RoleArn:
+    Description: ARN of the Lambda Execution Role
+    Value: !GetAtt LambdaRole.Arn
