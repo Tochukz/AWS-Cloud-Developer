@@ -1,0 +1,23 @@
+version = 0.1
+
+[dev.deploy.parameters]
+stack_name = "my-dev-stack"
+s3_bucket = "xxxxx-dev"
+s3_prefix = "xxxxx/dev"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=Developement"
+
+[prod.deploy.parameters]
+stack_name = "my-prod-stack"
+s3_bucket = "xxxxx-prod"
+s3_prefix = "xxxxx/prod"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=Production"
+
+[dev.sync.parameters]
+watch = true
+
+[prod.sync.parameters]
+watch = false
