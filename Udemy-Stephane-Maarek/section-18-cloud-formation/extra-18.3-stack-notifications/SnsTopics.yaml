@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create SNS topics and subscriptions
+
+Parameters:
+  SubscriptionEmail1:
+    Type: String
+    Description: Email address to subscribe to the SNS topic
+  SubscriptionEmail2:
+    Type: String
+    Description: Email address to subscribe to the SNS topic
+
+Resources:
+  Topic1:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: StackTopic1
+
+  Subscription1:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref Topic1
+      Protocol: email
+      Endpoint: !Ref SubscriptionEmail1
+
+  Topic2:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: StackTopic2
+
+  Subscription2:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref Topic2
+      Protocol: email
+      Endpoint: !Ref SubscriptionEmail2
+
+Outputs:
+  Topic1Arn:
+    Description: ARN of the first SNS topic
+    Value: !Ref Topic1
+  Topic2Arn:
+    Description: ARN of the second SNS topic
+    Value: !Ref Topic2

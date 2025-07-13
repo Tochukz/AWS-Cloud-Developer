@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "SubscriptionEmail1",
+    "ParameterValue": "john@yahoo.com"
+  },
+  {
+    "ParameterKey": "SubscriptionEmail2",
+    "ParameterValue": "peter@gmail.com"
+  }
+]

@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Demonstrating the use of the pseudo parameter -  AWS::NotificationARNs
+
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: simple-bucket-1307
+
+Outputs:
+  NotificationARNs:
+    Description: ARNs of SNS topics configured for stack notifications
+    Value: !Join [", ", !Ref "AWS::NotificationARNs"]
