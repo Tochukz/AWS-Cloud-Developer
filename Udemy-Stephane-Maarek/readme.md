@@ -29,9 +29,11 @@ Section | Pg  | Title
 5       | 39  | EC2 Fundamental
 6       | 74  | EC2 Instance Storage
 7       |  97 | AWS Fundamentals: ELB + ASG
+8       |   -  | -
 12      | 241 | AWS CLI, SDK, IAM Roles & Policies
 16      | 319 | ECS, ECR and Fargate
 17      | 361 | AWS Elastic Beanstalk
 18      | 386 | AWS CloudFormation
+19      | 434 | AWS Integration & Messaging
 24      | 708 | AWS CICD
 25      | 746 | Serverless Application Model
