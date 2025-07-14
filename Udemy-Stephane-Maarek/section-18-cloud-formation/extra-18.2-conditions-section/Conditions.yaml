@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Uses the  Conditions section to configional resource and properties
+
+Parameters:
+  Env:
+    Type: String
+    Description: Deployment environment (Dev or Prod)
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - Uat
+      - Prod
+
+Mappings:
+  Envs:
+    Dev:
+      suffix: dev
+    Prod:
+      suffix: prod
+    Uat:
+      suffix: uat
+  Images: # Amazon Linux 2023 AMI 64-bit (x86), uefi-preferred
+    eu-west-1:
+      Ami: ami-0720a3ca2735bf2fa
+    eu-west-2:
+      Ami: ami-04ba8620fc44e2264
+    eu-west-3:
+      Ami: ami-0960d166ab83fd695
+
+Conditions:
+  IsUatOrProdRegion: !Or
+    - !Equals [!Ref AWS::Region, "eu-west-1"]
+    - !Equals [!Ref AWS::Region, "eu-west-3"]
+  IsProd: !Equals [!Ref Env, "Prod"]
+
+Resources:
+  SimpleBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsUatOrProdRegion
+    Properties:
+      BucketName:
+        !Sub [
+          "simple-bucket-1407-${env}",
+          { env: !FindInMap [Envs, !Ref Env, suffix] },
+        ]
+
+  SimpleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [Images, !Ref AWS::Region, Ami]
+      InstanceType: !If [IsProd, t2.micro, t2.nano]
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env}Instance
+        - Key: Environment
+          Value: !Ref Env

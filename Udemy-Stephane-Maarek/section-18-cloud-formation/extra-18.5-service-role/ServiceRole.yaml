@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Created Policy for IAM User and a Service Role for CloudFormation
+
+Parameters:
+  UserName:
+    Type: String
+    Description: Username of an existing IAM user
+    Default: john
+
+Resources:
+  ServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: To be used by CloudFormation
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: GeneralPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowGeneral
+                Effect: Allow
+                Action:
+                  - ec2:*
+                  - iam:*
+                Resource: "*"
+
+  UserPolicy:
+    Type: AWS::IAM::UserPolicy
+    Properties:
+      UserName: !Ref UserName
+      PolicyName: DevUserPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowAllCloudFormation
+            Effect: Allow
+            Action: cloudformation:*
+            Resource: "*"
+          - Sid: AllowPassRole
+            Effect: Allow
+            Action: iam:PassRole
+            Resource: !GetAtt ServiceRole.Arn
+
+Outputs:
+  ServiceRoleArn:
+    Description: ARN of the Service Role
+    Value: !GetAtt ServiceRole.Arn
+  ServiceRoleName:
+    Description: Name of the Service Role
+    Value: !Ref ServiceRole
