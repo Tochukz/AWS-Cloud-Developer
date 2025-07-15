@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create RDS instance with IAM authentication enabled
+
+Parameter:
+  VpcId:
+    Type: AWS::EC2::VPC::VpcId
+    Description: Existing VPC Id
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing Keypair KeyName
+  SubnetIds:
+    Type: List<String>
+    Description: List of subnet IDs
+  DbUsername:
+    Type: String
+    Description: Username for the RDS instance
+  DbPassword:
+    Type: String
+    Description: Password for the RDS instance
+
+Mappings:
+  Images: # Amazon Linux 2023 AMI 64-bit (x86), uefi-preferred
+    eu-west-1:
+      Ami: ami-0720a3ca2735bf2fa
+    eu-west-2:
+      Ami: ami-04ba8620fc44e2264
+    eu-west-3:
+      Ami: ami-0960d166ab83fd695
+
+Resources:
+  Ec2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: Ec2SecuriryGroup
+      GroupDescription: Allow SSH
+      VpcId: !Red VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow EC2 access to RDS
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref Ec2SecurityGroup
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets for RDS
+      SubnetIds: !Ref SubnetIds
+
+  DbInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: my-iam-db-instance
+      Engine: mysql
+      EngineVersion: 8.0.35
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      MasterUsername: !Ref DbUsername
+      MasterUserPassword: !Ref DbPassword
+      DBSubnetGroupName: !Ref MyDBSubnetGroup
+      VPCSecurityGroups:
+        - !GetAtt RdsSecurityGroup.GroupId
+      EnableIAMDatabaseAuthentication: true
+      PubliclyAccessible: false
+
+  Ec2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Ec2InstanceRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref Ec2InstanceRole
+
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !Find [Images, !Ref AWS::Region, Ami]
+      SubnetId: !Select [0, !Ref SubnetIds]
+      SecurityGroupIds:
+        - !Ref Ec2SecurityGroup
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      KeyName: !Ref KeyName
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install -y mysql
+
+Outputs:
+  RdsInstanceEndpoint:
+    Description: RDS Instance Endpoint
+    Value: !GetAtt DbInstance.Endpoint.Address
+  Ec2PublicIP:
+    Description: Public IP of EC2 Instance
+    Value: !GetAtt Ec2Instance.PublicIp
