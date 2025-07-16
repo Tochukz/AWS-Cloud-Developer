@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-1234567"
+  },
+  {
+    "ParameterKey": "SubnetIds",
+    "ParameterValue": "subnet-1234667,subnet65789"
+  },
+  {
+    "ParameterKey": "DbUsername",
+    "ParameterValue": "dbuser"
+  },
+  {
+    "ParameterKey": "DbPassword",
+    "ParameterValue": "dbpass"
+  }
+]

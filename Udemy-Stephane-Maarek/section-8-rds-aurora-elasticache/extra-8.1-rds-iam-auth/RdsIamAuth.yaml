@@ -2,22 +2,25 @@ AWSTemplateFormatVersion: 2010-09-09
 
 Description: Create RDS instance with IAM authentication enabled
 
-Parameter:
+Parameters:
   VpcId:
-    Type: AWS::EC2::VPC::VpcId
+    Type: AWS::EC2::VPC::Id
     Description: Existing VPC Id
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Existing Keypair KeyName
+    Default: DevSimpleKey
   SubnetIds:
-    Type: List<String>
+    Type: List<AWS::EC2::Subnet::Id>
     Description: List of subnet IDs
   DbUsername:
     Type: String
     Description: Username for the RDS instance
+    NoEcho: true
   DbPassword:
     Type: String
     Description: Password for the RDS instance
+    NoEcho: true
 
 Mappings:
   Images: # Amazon Linux 2023 AMI 64-bit (x86), uefi-preferred
@@ -34,7 +37,7 @@ Resources:
     Properties:
       GroupName: Ec2SecuriryGroup
       GroupDescription: Allow SSH
-      VpcId: !Red VpcId
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -61,14 +64,15 @@ Resources:
   DbInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: my-iam-db-instance
+      DBInstanceIdentifier: simpledb
+      DBName: company,
       Engine: mysql
       EngineVersion: 8.0.35
       DBInstanceClass: db.t3.micro
       AllocatedStorage: 20
       MasterUsername: !Ref DbUsername
       MasterUserPassword: !Ref DbPassword
-      DBSubnetGroupName: !Ref MyDBSubnetGroup
+      DBSubnetGroupName: !Ref DbSubnetGroup
       VPCSecurityGroups:
         - !GetAtt RdsSecurityGroup.GroupId
       EnableIAMDatabaseAuthentication: true
@@ -99,7 +103,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      ImageId: !Find [Images, !Ref AWS::Region, Ami]
+      ImageId: !FindInMap [Images, !Ref AWS::Region, Ami]
       SubnetId: !Select [0, !Ref SubnetIds]
       SecurityGroupIds:
         - !Ref Ec2SecurityGroup
@@ -108,8 +112,13 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash
-          yum update -y
-          yum install -y mysql
+
+          # Install node
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          source "$NVM_DIR/nvm.sh"
+          nvm install 22
+          node -v
 
 Outputs:
   RdsInstanceEndpoint:
