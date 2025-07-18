@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This template configures a CloudFront Distribution with Origin Request Policy
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket name for Lambda code
+    Default: chucks-workspace-storage
+  CodeKey:
+    Type: String
+    Description: S3 Object key for the Lambda code
+    Default: artifacts/lambda-code-180725.zip
+  OriginId:
+    Type: String
+    Description: This is a constant
+    Default: LambdaOrigin
+    AllowedValues:
+      - LambdaOrigin
+
+Mappings:
+  Constants:
+    ManagedPolicies:
+      CachingDisabled: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # This policy disables caching. This policy is useful for dynamic content and for requests that are not cacheable.
+      CachingOptimized: 658327ea-f89d-4fab-a63d-7e88639e58f6 # This policy is designed to optimize cache efficiency by minimizing the values that CloudFront includes in the cache key.
+      # To see other manages cache policies, go to CloudFront console > Policies > Cache, see list under "Managed policies"
+      # Or visit https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  OriginLambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaOrigin
+      Handler: lambda.handler
+      Runtime: nodejs20.x
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: !Ref CodeKey
+
+  LambdaUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt OriginLambdaFunc.Arn
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref OriginLambdaFunc
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+  OriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: OriginRequestPolicy1807
+        Comment: Custom origin request policy
+        CookiesConfig:
+          CookieBehavior: whitelist # none|whitelist|all|allExcept)
+          Cookies: ["SessionId", "UserId"]
+        HeadersConfig:
+          HeaderBehavior: whitelist # none|whitelist|allViewer|allViewerAndWhitelistCloudFront|
+          Headers: ["Content-Type", "X-API-Key"] # "Authorization" is not allowed
+        QueryStringsConfig:
+          QueryStringBehavior: whitelist # none|whitelist|all|allExcept
+          QueryStrings: ["page", "pagesize", "lang"]
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /error.html
+        DefaultCacheBehavior:
+          TargetOriginId: !Ref OriginId
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId:
+            !FindInMap [Constants, ManagedPolicies, CachingDisabled]
+          OriginRequestPolicyId: !Ref OriginRequestPolicy
+          AllowedMethods: [HEAD, DELETE, POST, GET, OPTIONS, PUT, PATCH]
+          CachedMethods:
+            - GET
+            - HEAD
+        Origins:
+          - Id: !Ref OriginId
+            DomainName: !Select [2, !Split ["/", !GetAtt LambdaUrl.FunctionUrl]] # This is done to trim the forward slash at the end of the FunctionUrl
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+
+Outputs:
+  LambdaUrl:
+    Description: Lambda URL
+    Value: !GetAtt LambdaUrl.FunctionUrl
+  DistributionId:
+    Description: CloudFront Distribution Id
+    Value: !Ref Distribution
+  DistDomain:
+    Description: Cloudfront Distribution domain name
+    Value: !GetAtt Distribution.DomainName

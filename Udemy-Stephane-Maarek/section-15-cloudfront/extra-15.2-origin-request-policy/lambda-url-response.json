@@ -1,0 +1,41 @@
+{
+  "message": "Lambda Handler Verion 0.0.1",
+  "path": "/",
+  "headers": {
+    "x-amzn-tls-version": "TLSv1.3",
+    "cookie": "SessionId=abc123; UserName=james12",
+    "x-forwarded-proto": "https",
+    "x-forwarded-port": "443",
+    "x-forwarded-for": "41.124.40.14",
+    "x-api-token": "sjajskjasas",
+    "accept": "*/*",
+    "authorization": "Bearer ashaksjks",
+    "x-amzn-tls-cipher-suite": "TLS_AES_128_GCM_SHA256",
+    "x-amzn-trace-id": "Root=1-687a9f17-34e63230590582ab414494ed",
+    "x-api-key": "asklakslaks",
+    "host": "5iidfkot3slcc6yxrqnarmzmby0csaqt.lambda-url.eu-west-2.on.aws",
+    "content-type": "application/json",
+    "user-agent": "curl/8.7.1"
+  },
+  "queryStrings": "name=Chucks&page=12",
+  "queryStringsAsObjects": [
+    {
+      "name": "Chucks"
+    },
+    {
+      "page": "12"
+    }
+  ],
+  "cookies": [
+    "SessionId=abc123",
+    "UserName=james12"
+  ],
+  "cookiesAsObjects": [
+    {
+      "SessionId": "abc123"
+    },
+    {
+      "UserName": "james12"
+    }
+  ]
+}
