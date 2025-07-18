@@ -1,0 +1,29 @@
+{
+  "message": "Lambda Handler Verion 0.0.1",
+  "path": "/index.html",
+  "headers": {
+    "x-amzn-tls-cipher-suite": "ECDHE-RSA-AES128-GCM-SHA256",
+    "x-amzn-tls-version": "TLSv1.2",
+    "x-amzn-trace-id": "Root=1-687a2bf9-274570d773d9246656b26621",
+    "cookie": "session-id=abc123",
+    "x-forwarded-proto": "https",
+    "host": "eedvl62qxpiorbuhishq7pleum0tzmru.lambda-url.eu-west-2.on.aws",
+    "x-forwarded-port": "443",
+    "x-forwarded-for": "41.124.40.14",
+    "x-amz-cf-id": "k7ra4_N_y88X0ybHmn9zqJeR_mt2GMBX8Gv9ott1gWBVgR-9RgLBtg==",
+    "user-agent": "Amazon CloudFront",
+    "via": "1.1 158b28560d03f7aeb1452dd5d648cf90.cloudfront.net (CloudFront)"
+  },
+  "queryStrings": "page=12",
+  "queryStringsAsObjects": [
+    {
+      "page": "12"
+    }
+  ],
+  "cookies": ["session-id=abc123"],
+  "cookiesAsObjects": [
+    {
+      "session-id": "abc123"
+    }
+  ]
+}

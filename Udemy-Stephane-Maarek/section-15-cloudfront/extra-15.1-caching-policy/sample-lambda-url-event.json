@@ -1,0 +1,39 @@
+{
+  "version": "2.0",
+  "routeKey": "$default",
+  "rawPath": "/",
+  "rawQueryString": "name=Chucks&page=12",
+  "cookies": ["sessionId=abc123", "userId=james12"],
+  "headers": {
+    "x-amzn-tls-cipher-suite": "TLS_AES_128_GCM_SHA256",
+    "x-amzn-tls-version": "TLSv1.3",
+    "x-amzn-trace-id": "Root=1-687a277e-17873472724c76c9564eefa2",
+    "cookie": "sessionId=abc123; userId=james12",
+    "x-forwarded-proto": "https",
+    "host": "eedvl62qxpiorbuhishq7pleum0tzmru.lambda-url.eu-west-2.on.aws",
+    "x-forwarded-port": "443",
+    "x-forwarded-for": "41.124.40.14",
+    "accept": "*/*",
+    "user-agent": "curl/8.7.1"
+  },
+  "queryStringParameters": { "name": "Chucks", "page": "12" },
+  "requestContext": {
+    "accountId": "anonymous",
+    "apiId": "eedvl62qxpiorbuhishq7pleum0tzmru",
+    "domainName": "eedvl62qxpiorbuhishq7pleum0tzmru.lambda-url.eu-west-2.on.aws",
+    "domainPrefix": "eedvl62qxpiorbuhishq7pleum0tzmru",
+    "http": {
+      "method": "GET",
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "41.124.40.14",
+      "userAgent": "curl/8.7.1"
+    },
+    "requestId": "970e72c9-1e91-47ce-befa-582a11b44c18",
+    "routeKey": "$default",
+    "stage": "$default",
+    "time": "18/Jul/2025:10:52:46 +0000",
+    "timeEpoch": 1752835966177
+  },
+  "isBase64Encoded": false
+}

@@ -1,0 +1,40 @@
+{
+  "version": "2.0",
+  "routeKey": "$default",
+  "rawPath": "/index.html",
+  "rawQueryString": "page=14",
+  "cookies": ["session-id=abc123"],
+  "headers": {
+    "x-amzn-tls-cipher-suite": "ECDHE-RSA-AES128-GCM-SHA256",
+    "x-amzn-tls-version": "TLSv1.2",
+    "x-amzn-trace-id": "Root=1-687a2fec-52f5b8390e6d65df25fe23f8",
+    "cookie": "session-id=abc123",
+    "x-forwarded-proto": "https",
+    "host": "eedvl62qxpiorbuhishq7pleum0tzmru.lambda-url.eu-west-2.on.aws",
+    "x-forwarded-port": "443",
+    "x-forwarded-for": "41.124.40.14",
+    "x-amz-cf-id": "wb5BjT599uVCUdfqFnoIvQT0buldQOvItqyQYSo4E_Alz_JIEreWOA==",
+    "user-agent": "Amazon CloudFront",
+    "via": "1.1 245d02350b27b930ccf62e1370f874bc.cloudfront.net (CloudFront)"
+  },
+  "queryStringParameters": { "page": "14" },
+  "requestContext": {
+    "accountId": "anonymous",
+    "apiId": "eedvl62qxpiorbuhishq7pleum0tzmru",
+    "domainName": "eedvl62qxpiorbuhishq7pleum0tzmru.lambda-url.eu-west-2.on.aws",
+    "domainPrefix": "eedvl62qxpiorbuhishq7pleum0tzmru",
+    "http": {
+      "method": "GET",
+      "path": "/index.html",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "64.252.84.47",
+      "userAgent": "Amazon CloudFront"
+    },
+    "requestId": "9a706d85-a3d9-4de1-920c-abe7cafa758c",
+    "routeKey": "$default",
+    "stage": "$default",
+    "time": "18/Jul/2025:11:28:44 +0000",
+    "timeEpoch": 1752838124403
+  },
+  "isBase64Encoded": false
+}

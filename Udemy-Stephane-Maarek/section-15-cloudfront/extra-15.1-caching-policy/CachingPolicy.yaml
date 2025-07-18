@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This template configures a CloudFront Distribution with Custom Cache Policy
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket name for Lambda code
+    Default: chucks-workspace-storage
+  CodeKey:
+    Type: String
+    Description: S3 Object key for the Lambda code
+    Default: artifacts/lambda-code-180725.zip
+  OriginId:
+    Type: String
+    Description: This is a constant
+    Default: LambdaOrigin
+    AllowedValues:
+      - LambdaOrigin
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  OriginLambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaOrigin
+      Handler: lambda.handler
+      Runtime: nodejs20.x
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: !Ref CodeKey
+
+  LambdaUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt OriginLambdaFunc.Arn
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref OriginLambdaFunc
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+  CustomCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: SimpleCachePolicy180725
+        Comment: A simple cache policy for demo
+        DefaultTTL: 86400 # 86400 seconds (one day)
+        MinTTL: 3600 # 1 hour
+        MaxTTL: 259200 # 3 Days
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: whitelist # none|whitelist|allExcept|all
+            Cookies: ["session-id", "preference"]
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: whitelist # none|whitelist
+            Headers: ["Content-Type", "Authorization", "X-API-Key"]
+          QueryStringsConfig:
+            QueryStringBehavior: whitelist # none|whitelist|allExcept|all
+            QueryStrings: ["page", "pagesize", "lang"]
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /error.html
+        DefaultCacheBehavior:
+          TargetOriginId: !Ref OriginId
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: !Ref CustomCachePolicy
+          AllowedMethods: [HEAD, DELETE, POST, GET, OPTIONS, PUT, PATCH]
+          CachedMethods:
+            - GET
+            - HEAD
+        Origins:
+          - Id: !Ref OriginId
+            DomainName: !Select [2, !Split ["/", !GetAtt LambdaUrl.FunctionUrl]] # This is done to trim the forward slash at the end of the FunctionUrl
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+
+Outputs:
+  LambdaUrl:
+    Description: Lambda URL
+    Value: !GetAtt LambdaUrl.FunctionUrl
+  DistributionId:
+    Description: CloudFront Distribution Id
+    Value: !Ref Distribution
+  DistDomain:
+    Description: Cloudfront Distribution domain name
+    Value: !GetAtt Distribution.DomainName
