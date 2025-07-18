@@ -9,7 +9,7 @@ We use the Origin Request Policy to specify the query string parameters, cookies
 We use Origin Request Policy for request properties that should ONLY be forwarded to the origin server but should not form a part of the cache key.  
 If you want to certain request properties to also form the cache key, in addition to being forwarded to the origin server, then use a _Cache Policy_ instead. See `extra-15.1-caching-policy`.
 
-Note that there are predefined managed origin request policy that may be used if you don't want to configure your own.
+**Note:** There are predefined managed origin request policy that may be used if you don't want to configure your own. See [managed-origin-request-policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
 
 ### Operation
 

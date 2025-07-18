@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This template configures a CloudFront Distribution with Public EC2 Instance as Origin Server
+
+Parameters:
+  OriginId:
+    Type: String
+    Description: This is a constant
+    Default: Ec2InstanceOrigin
+    AllowedValues:
+      - Ec2InstanceOrigin
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing EC2 Key Pair
+    Default: DevSimpleKey
+
+Mappings:
+  Images: # Amazon Linux 2023 AMI 64-bit (x86), uefi-preferred
+    eu-west-1:
+      Ami: ami-0720a3ca2735bf2fa
+    eu-west-2:
+      Ami: ami-04ba8620fc44e2264
+    eu-west-3:
+      Ami: ami-0960d166ab83fd695
+  Constants:
+    ManagedPolicies:
+      CachingDisabled: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # This policy disables caching. This policy is useful for dynamic content and for requests that are not cacheable.
+      CachingOptimized: 658327ea-f89d-4fab-a63d-7e88639e58f6 # This policy is designed to optimize cache efficiency by minimizing the values that CloudFront includes in the cache key.
+      # To see other manages cache policies, go to CloudFront console > Policies > Cache, see list under "Managed policies"
+      # Or visit https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
+
+Resources:
+  Ec2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: Ec2SecurityGroup
+      GroupDescription: Security group for EC2
+      SecurityGroupIngress:
+        - Description: Allow SSH traffic
+          IpProtocol: TCP
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - Description: Allow HTTP traffic
+          IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  SimpleEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [Images, !Ref AWS::Region, Ami]
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !GetAtt Ec2SecurityGroup.GroupId
+      Tags:
+        - Key: Name
+          Value: SimpleEc2
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+
+          sudo dnf update -y
+
+          ## Install Nginx
+          sudo dnf install nginx -y
+
+          sudo systemctl enable nginx
+          sudo systemctl start nginx
+          sudo systemctl status nginx
+
+          # Enable Nginx to start on boot
+          sudo systemctl enable nginx
+          # You can verify it was enabled with:
+          sudo systemctl is-enabled nginx
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /error.html
+        DefaultCacheBehavior:
+          TargetOriginId: !Ref OriginId
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId:
+            !FindInMap [Constants, ManagedPolicies, CachingOptimized]
+          AllowedMethods: [HEAD, DELETE, POST, GET, OPTIONS, PUT, PATCH]
+          CachedMethods:
+            - GET
+            - HEAD
+        Origins:
+          - Id: !Ref OriginId
+            DomainName: !GetAtt SimpleEc2.PublicDnsName
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+
+Outputs:
+  PublicDnsName:
+    Description: EC2 Instance DNS Name
+    Value: !GetAtt SimpleEc2.PublicDnsName
+  DistributionId:
+    Description: CloudFront Distribution Id
+    Value: !Ref Distribution
+  DistDomain:
+    Description: Cloudfront Distribution domain name
+    Value: !GetAtt Distribution.DomainName

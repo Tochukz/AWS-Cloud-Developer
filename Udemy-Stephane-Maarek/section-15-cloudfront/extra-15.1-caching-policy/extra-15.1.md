@@ -10,7 +10,7 @@ All the enabled query string parameter, cookies or request header are automatica
 
 Sometimes you may want certain request properties to be sent to the origin server without forming part of the cache key. In that case, an _Origin Request Policy_ is your answer. See `extra-15.2-origin-request-policy`.
 
-Note that there are predefined managed cache policies that may be used if you don't want to configure your own Cache Policy. See [managed-cache-policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+**Note:** There are predefined managed cache policies that may be used if you don't want to configure your own Cache Policy. See [managed-cache-policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
 
 ### Operation
 
