@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create a Custom Metric from CloudWatch Logs using Metric Filter.
+
+Parameters:
+  SubscriptionEmail:
+    Type: String
+    Description: Email address for SNS subscription
+  MetricNamespace:
+    Type: String
+    Description: This is a constant
+    Default: Custom/ApplicationError
+    AllowedValues:
+      - Custom/ApplicationError
+  MetricName:
+    Type: String
+    Description: This is a constant
+    Default: ErrorCount
+    AllowedValues:
+      - ErrorCount
+
+Resources:
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ApplicationErrors
+
+  EmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlarmTopic
+      Protocol: email
+      Endpoint: !Ref SubscriptionEmail
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/SimpleLogs
+      RetentionInDays: 3
+
+  MetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: ErrorRate
+      FilterPattern: "%Error|error|ERROR%" # '{ $.applicationName = "FinApp" && $.deploymentEnv = "Production" && ("error" || "ERROR" || "Error") }' # case insensitive for the word "error"
+      LogGroupName: !Ref LogGroup
+      MetricTransformations:
+        - MetricNamespace: !Ref MetricNamespace
+          MetricName: !Ref MetricName
+          MetricValue: 1
+          Unit: Count
+
+  ErrorCountAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ErrorAlarm
+      AlarmDescription: Set off alarm if 5 errors or more happens in 1 minute
+      Namespace: !Ref MetricNamespace
+      MetricName: !Ref MetricName
+      Period: 60 # in seconds
+      EvaluationPeriods: 1 # seconds
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Statistic: Sum
+      AlarmActions:
+        - !Ref AlarmTopic
+# Important: MetricTransformations.Dimensions
+# Metrics extracted from log events are charged as custom metrics. To prevent unexpected high charges,
+# do not specify high-cardinality fields such as IPAddress or requestID as dimensions.
+# Each different value found for a dimension is treated as a separate metric and accrues charges as a separate custom metric.
+# CloudWatch Logs disables a metric filter if it generates 1000 different name/value pairs for your specified dimensions within
+# a certain amount of time. This helps to prevent accidental high charges.
+# You can also set up a billing alarm to alert you if your charges are higher than expected. For more information, see Creating a Billing Alarm to Monitor Your Estimated AWS Charges.
