@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create a CloudWatch Alarm that monitors the CPU utilization of EC2 and shotdown the EC2 when it reaches 90%
+
+Resources:
+  SimpleEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 for eu-west2
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: SimpleEc2
+
+  Ec2Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: Ec2InstanceAlarm
+      AlarmDescription: Shot down EC2 instance if CPUUtilization reaches 90%
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref SimpleEc2
+      Period: 300 # in seconds
+      EvaluationPeriods: 1 # seconds
+      Threshold: 90
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Statistic: Average
+      AlarmActions:
+        - !Sub arn:aws:automate:${AWS::Region}:ec2:terminate
