@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Event Rule to capture EC2 State Change Events
+
+Parameters:
+  SubscriptionEmail:
+    Type: String
+    Description: Email for SNS subscription
+
+Resources:
+  SimpleEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 for eu-west2
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: SimpleEc2
+
+  Ec2Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: Ec2StateChange
+
+  Subscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref Ec2Topic
+      Protocol: email
+      Endpoint: !Ref SubscriptionEmail
+
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref Ec2Topic
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref Ec2Topic
+
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: Ec2StateChangeEvents
+      Description: Capture EC2 events for stop or termination of EC2 instance
+      EventBusName: default
+      EventPattern:
+        source:
+          - "aws.ec2"
+        detail-type:
+          - "EC2 Instance State-change Notification"
+        detail:
+          state:
+            - stopped
+            - terminated
+      State: ENABLED
+      Targets:
+        - Id: SnsTopic
+          Arn: !Ref Ec2Topic
+
+Outputs:
+  InstanceId:
+    Description: Instance ID of the EC2 instance
+    Value: !Ref SimpleEc2

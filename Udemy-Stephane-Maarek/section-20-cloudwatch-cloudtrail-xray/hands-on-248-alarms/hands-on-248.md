@@ -39,6 +39,8 @@ Wait for a few minutes.
 
 2. Go to the EC2 Console to check if the EC2 instance has been terminated.
 
+3. Go to the CloudWatch Console > All Alarms > Select the Alarm > Click on the _History_ Tab. You should see when the Alarm go to Alarm State and when it successfully terminated the EC2 instance.
+
 **Debug Errors**
 
 **Cleanup**  
