@@ -161,16 +161,215 @@ $ aws cloudwatch set-alarm-state --alarm-name "myalarm" --state-value
 ALARM --state-reason "testing purposes"
 ```
 
+__CloudWatch Synthetics Canary__  
+* Configurable script that monitor your APIs, URLs, Websites, …
+* Reproduce what your customers do programmatically to find issues before customers are impacted
+* Checks the availability and latency of your endpoints and can store load time data and screenshots of the UI
+* Integration with CloudWatch Alarms
+* Scripts written in Node.js or Python
+* Programmatic access to a headless Google Chrome
+browser
+* Can run once or on a regular schedule
+
 __CloudWatch Synthetics Canary Blueprints__  
-* Heartbeat Monitor – load URL, store screenshot and an HTTP archive file
+* __Heartbeat Monitor__ – load URL, store screenshot and an HTTP archive file
 * API Canary – test basic read and write functions of REST APIs
-* Broken Link Checker – check all links inside the URL that you are testing
-* Visual Monitoring – compare a screenshot taken during a canary run with a baseline screenshot
-* Canary Recorder – used with CloudWatch Synthetics Recorder (record your actions on a website and automatically generates a script for that)
-* GUI Workflow Builder – verifies that actions can be taken on your webpage (e.g.,test a webpage with a login form)
+* __Broken Link Checker__ – check all links inside the URL that you are testing
+* __Visual Monitoring__ – compare a screenshot taken during a canary run with a baseline screenshot
+* __Canary Recorder__ – used with CloudWatch Synthetics Recorder (record your actions on a website and automatically generates a script for that)
+* __GUI Workflow Builder__ – verifies that actions can be taken on your webpage (e.g.,test a webpage with a login form)
 
 ## Amazon EventBridge
+__Introduction__  
+* Schedule: Cron jobs (scheduled scripts)
+  - Schedule Every hour - Trigger script on Lambda function
+* Event Pattern: Event rules to react to a service doing something
+  - e.g IAM Root User Sign in Event - SNS Topic with Email Notification
+* Trigger Lambda functions, send SQS/SNS messages
+
+__Amazon EventBridge – Resource-based Policy__  
+* Manage permissions for a specific Event Bus
+* Example: allow/deny events from another AWS account or AWS region
+* Use case: aggregate all events from your AWS Organization in a single AWS account or AWS region
+
+![](slides/eventbridge-resource-based-policy.png)  
 
 ## X-Ray
+Visual analysis of our applications
+
+__AWS X-Ray advantages__   
+* Troubleshooting performance (bottlenecks)
+* Understand dependencies in a microservice architecture
+* Pinpoint service issues
+* Review request behavior
+* Find errors and exceptions
+* Are we meeting time SLA?
+* Where I am throttled?
+* Identify users that are impacted
+
+__X-Ray compatibility__   
+* AWS Lambda
+* Elastic Beanstalk
+* ECS
+* ELB
+* API Gateway
+* EC2 Instances or any application server (even on premise)
+
+__AWS X-Ray Leverages Tracing__    
+* Tracing is an end to end way to following a “request”
+* Each component dealing with the request adds its own “trace”
+* Tracing is made of segments (+ sub segments)
+* Annotations can be added to traces to provide extra-information
+* Ability to trace:
+  - Every request
+  - Sample request (as a % for example or a rate per minute)
+* X-Ray Security:
+  - IAM for authorization
+  - KMS for encryption at rest
+
+__AWS X-Ray How to enable it?__   
+1. __Your code (Java, Python, Go, Node.js, .NET) must import the _AWS X-Ray SDK___
+* Very little code modification needed
+* The application SDK will then capture:
+  - Calls to AWS services
+  - HTTP / HTTPS requests
+  - Database Calls (MySQL, PostgreSQL, DynamoDB)
+  - Queue calls (SQS)
+2. __Install the X-Ray daemon or enable X-Ray AWS Integration__
+* X-Ray daemon works as a low level UDP packet interceptor (Linux / Windows / Mac…)
+* AWS Lambda / other AWS services already run the X-Ray daemon for you
+* Each application must have the IAM rights to write data to X-Ray
+
+__The X-Ray magic__  
+* X-Ray service collects data from all the different services
+* Service map is computed from all the segments and traces
+* X-Ray is graphical, so even non technical people can help troubleshoot
+
+__AWS X-Ray Troubleshooting__  
+* If X-Ray is not working on EC2
+  - Ensure the EC2 IAM Role has the proper permissions
+  - Ensure the EC2 instance is running the X-Ray Daemon
+* To enable on AWS Lambda:
+  - Ensure it has an IAM execution role with proper policy (AWSX-RayWriteOnlyAccess)
+  - Ensure that X-Ray is imported in the code
+  - Enable __Lambda X-Ray Active Tracing__
+
+__X-Ray Instrumentation in your code__   
+* __Instrumentation__ means the measure of product’s performance, diagnose errors, and to write trace information.
+* To instrument your application code, you use the __X-Ray SDK__
+* Many SDK require only configuration changes
+* You can modify your application code to customize and annotation the data that the SDK sends to XRay, using _interceptors_, _filters_, _handlers_, _middleware_…
+
+__X-Ray Concepts__  
+* __Segments:__ each application / service will send them
+* __Subsegments:__ if you need more details in your segment
+* __Trace:__ segments collected together to form an end-to-end trace
+* __Sampling:__ decrease the amount of requests sent to X-Ray, reduce cost
+* __Annotations:__ Key Value pairs used to index traces and use with filters
+* __Metadata:__ Key Value pairs, not indexed, not used for searching
+
+* The X-Ray daemon / agent has a config to send traces cross account:
+  - make sure the IAM permissions are correct – the agent will assume the role
+  - This allows to have a central account for all your application tracing
+
+__X-Ray Sampling Rules__  
+* With sampling rules, you control the amount of data that you record
+* You can modify sampling rules without changing your code
+* By default, the X-Ray SDK records the first request _each second_, and _five percent_ of any additional requests.
+* _One request per second is the reservoir_, which ensures that at least one trace is recorded each second as long the service is serving requests.
+* _Five percent is the rate_ at which additional requests beyond the reservoir size are sampled.
+
+__X-Ray Custom Sampling Rules__  
+* You can create your own rules with the _reservoir_ and _rate_
+
+![](slides/xray-custom-sampling-rules.png)
+
+__X-Ray with Elastic Beanstalk__   
+* AWS Elastic Beanstalk platforms include the X-Ray daemon
+* You can run the daemon by setting an option in the Elastic Beanstalk console
+or with a configuration file (in `.ebextensions/xray-daemon.config`)
+```yaml
+option_settings:
+    aws:elasticbeanstalk:xray:
+        XRayEnabled: true  
+```
+* Make sure to give your instance profile the correct IAM permissions so that
+the X-Ray daemon can function correctly
+* Then make sure your application code is instrumented with the X-Ray SDK
+* __Note:__ The X-Ray daemon is not provided for Multicontainer Docker
+
+__ECS + X-Ray integration options__  
+![](slides/ecs-xray-integration-options.png)
+
+__ECS + X-Ray: Example Task Definition__  
+![](slides/ecs-xray-example-task-definition.png)
+
+
+__AWS Distro for OpenTelemetry__  
+* Secure, production-ready AWS-supported distribution of the open-source project OpenTelemetry project
+* Provides a single set of APIs, libraries, agents, and collector services
+* Collects distributed traces and metrics from your apps
+* Collects metadata from your AWS resources and services
+* _Auto-instrumentation_ Agents to collect traces without changing your code
+* Send traces and metrics to multiple AWS services and partner solutions
+  - X-Ray, CloudWatch, Prometheus…
+* Instrument your apps running on AWS (e.g., EC2, ECS, EKS, Fargate, Lambda) as well as on-premises
+* _Migrate from X-Ray to AWS Distro for Temeletry if you want to standardize with open-source APIs from Telemetry or send traces to multiple destinations simultaneously_
 
 ## CloudTrail
+__Introduction__  
+* Provides governance, compliance and audit for your AWS Account
+* CloudTrail is enabled by default!
+* Get an history of events / API calls made within your AWS Account by:
+  - Console
+  - SDK
+  - CLI
+  - AWS Services
+* Can put logs from CloudTrail into CloudWatch Logs or S3
+* A trail can be applied to All Regions (default) or a single Region.
+* If a resource is deleted in AWS, investigate CloudTrail first!
+
+__CloudTrail Events__  
+* __Management Events:__
+  - Operations that are performed on resources in your AWS account
+  - Examples:
+    * Configuring security (IAM AttachRolePolicy)
+    * Configuring rules for routing data (Amazon EC2 CreateSubnet)
+    * Setting up logging (AWS CloudTrail CreateTrail)
+  - _By default, trails are configured to log management events._
+  - Can separate _Read Events_ (that don’t modify resources) from _Write Events_ (that may modify resources)
+* __Data Events:__
+  - _By default, data events are not logged (because high volume operations)_
+  - Amazon S3 object-level activity (ex: `GetObject`, `DeleteObject`, `PutObject`): can separate Read and Write Events
+  - AWS Lambda function execution activity (the Invoke API)
+* __CloudTrail Insights Events:__
+  - See next section
+
+__CloudTrail Insights__  
+* Enable CloudTrail Insights to detect unusual activity in your account:
+  - inaccurate resource provisioning
+  - hitting service limits
+  - Bursts of AWS IAM actions
+  - Gaps in periodic maintenance activity
+* CloudTrail Insights analyzes normal management events to create a baseline
+* And then continuously analyzes write events to detect unusual patterns
+  - Anomalies appear in the CloudTrail console
+  - Event is sent to Amazon S3
+  - An EventBridge event is generated (for automation needs)
+
+__CloudTrail Events Retention__  
+* Events are stored for 90 days in CloudTrail
+* To keep events beyond this period, log them to S3 and use Athena
+
+__CloudTrail vs CloudWatch vs X-Ray__  
+* __CloudTrail:__
+  - Audit API calls made by users / services / AWS console
+  - Useful to detect unauthorized calls or root cause of changes
+* __CloudWatch:__
+  - CloudWatch Metrics over time for monitoring
+  - CloudWatch Logs for storing application log
+  - CloudWatch Alarms to send notifications in case of unexpected metrics
+* __X-Ray:__
+  - Automated Trace Analysis & Central Service Map Visualization
+  - Latency, Errors and Fault analysis
+  - Request tracking across distributed systems

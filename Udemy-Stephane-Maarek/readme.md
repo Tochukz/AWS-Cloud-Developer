@@ -32,9 +32,12 @@ Section | Pg  | Title
 8       | 140 | RDS, Aurora, & ElastiCache
 9       | 167 | Amazon Route 53
 12      | 241 | AWS CLI, SDK, IAM Roles & Policies
+15      | 288 | Amazon CloudFront
 16      | 319 | ECS, ECR and Fargate
 17      | 361 | AWS Elastic Beanstalk
 18      | 386 | AWS CloudFormation
 19      | 434 | AWS Integration & Messaging
+20      | 476 | AWS Monitoring, Troubleshooting & Audit
+21      | 534 | AWS Lambda
 24      | 708 | AWS CICD
 25      | 746 | Serverless Application Model
