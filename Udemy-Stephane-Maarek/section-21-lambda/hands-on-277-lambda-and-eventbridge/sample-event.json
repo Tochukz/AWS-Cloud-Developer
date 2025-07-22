@@ -1,0 +1,13 @@
+{
+  "version": "0",
+  "id": "575ef699-6108-4995-c6dd-d5eaec446653",
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+  "account": "<account-id>",
+  "time": "2025-07-22T05:58:39Z",
+  "region": "eu-west-2",
+  "resources": [
+    "arn:aws:events:eu-west-2:<account-id>:rule/EveryMinuteInvocation"
+  ],
+  "detail": {}
+}

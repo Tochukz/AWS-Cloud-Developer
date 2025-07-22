@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This configuration integrate Lambda funtion to a Scheduled Event Bridge Rule in other to create a Cron Job
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: DemoFunc22
+      Runtime: python3.9
+      Role: !GetAtt LambdaRole.Arn
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+            print(event)
+            
+            return {
+              'statusCode': 200,
+              'headers': {
+                'Content-Type': 'application/json'
+              },
+              'body': json.dumps({
+                'message': 'Welcome to Lambda and EventBridge'
+              }),
+            }
+
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: EveryMinuteInvocation
+      EventBusName: default
+      Description: Invoke Lambda function every minute
+      ScheduleExpression: rate(1 minute) # rate(2 minutes)
+      Targets:
+        - Id: LambdaTarget
+          Arn: !GetAtt LambdaFunc.Arn
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunc
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventRule.Arn
