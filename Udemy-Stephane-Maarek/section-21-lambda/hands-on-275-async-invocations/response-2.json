@@ -1,0 +1,1 @@
+{"errorMessage": "the name field is required!", "errorType": "Exception", "requestId": "e70f4566-70d0-4d5c-b2a5-43c31f650a50", "stackTrace": ["  File \"/var/task/index.py\", line 7, in handler\n    raise Exception('the name field is required!')\n"]}

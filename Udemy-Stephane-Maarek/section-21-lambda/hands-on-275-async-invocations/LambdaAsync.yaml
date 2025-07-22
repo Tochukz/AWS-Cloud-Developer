@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This configuration sets up a Dead Letter Queue for a Lambda function to capture failed asynchronous invocations
+
+Resources:
+  SimpleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: simple-queue
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SimpleLambdaPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowSqsRead
+                Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                Resource: !GetAtt SimpleQueue.Arn
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunc
+      Runtime: python3.9
+      Role: !GetAtt LambdaRole.Arn
+      Handler: index.handler
+      DeadLetterConfig:
+        TargetArn: !GetAtt SimpleQueue.Arn
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+            print(event)
+
+            if (event['name'] == None or event['name'] == ""):
+              raise Exception('the name field is required!')
+            
+            return {
+              'statusCode': 200,
+              'statusDescription': '200 OK',
+              'headers': {
+                'Content-Type': 'application/json'
+              },
+              'body': json.dumps({
+                'message': 'Welcome to Asynchronous invocation'
+              }),
+            }
+
+Outputs:
+  QueueUrl:
+    Description: URL of the Queue
+    Value: !Ref SimpleQueue
