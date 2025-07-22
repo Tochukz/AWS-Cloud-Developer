@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This configuration setup a Lambda EventSource Mapping
+
+Resources:
+  SimpleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: simple-queue-2207
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LambdaSqsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowSqsReceive
+                Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt SimpleQueue.Arn
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: QueueFunc
+      Runtime: python3.9
+      Role: !GetAtt LambdaRole.Arn
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+            print(event)
+            
+            return {
+              'statusCode': 200,
+              'headers': {
+                'Content-Type': 'application/json'
+              },
+              'body': json.dumps({
+                'message': 'Welcome to Lambda and EventBridge'
+              }),
+            }
+
+  SqsEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt SimpleQueue.Arn
+      FunctionName: !Ref LambdaFunc
+
+Outputs:
+  QueueUrl:
+    Description: URL of the Queue
+    Value: !Ref SimpleQueue

@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "c262c337-05c8-4706-b299-ed26249dab99",
+      "receiptHandle": "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "body": "{\n  \"ProductId\": \"cs6b49bb-c378-4a15-b2e3-842a9850b23d\",\n  \"ProductName\": \"Gloves\",\n  \"Category\": \"Accessories\",\n  \"PricePerUnit\": \"10\",\n  \"CustomerId\": \"be44af0a-74f9-438e-a3ac-e3e21d84259f\",\n  \"CustomerName\": \"John Doe\",\n  \"TimeOfVisit\": \"2021-01-31T16:23:42.389Z\" \n}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1753202067501",
+        "SenderId": "AIDAUSJEUXM7ZM6DGARCI",
+        "ApproximateFirstReceiveTimestamp": "1753202067506"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "aa331ca5d1c1cb7910942d849b8c8021",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:eu-west-2:<account-id>:simple-queue-2207",
+      "awsRegion": "eu-west-2"
+    }
+  ]
+}

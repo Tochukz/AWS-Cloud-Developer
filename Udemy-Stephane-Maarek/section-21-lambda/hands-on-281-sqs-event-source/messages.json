@@ -1,0 +1,14 @@
+[
+  {
+    "Id": "1",
+    "MessageBody": "{ \"bookId\": 1, \"title\": \"Engineering Mechanics\", \"author\": \"Dr D. w Kumar\", \"edition\": \"4th\", \"price\": 3500, \"img\": \"1.jpg\", \"availability\": 1, \"pages\": null, \"language\": \"English\", \"subcategoryId\": 1}"
+  },
+  {
+    "Id": "2",
+    "MessageBody": "{ \"bookId\": 2, \"title\": \"Automobile Engineering II\", \"author\": \"P. S. Gill\", \"edition\": \"\", \"price\": 4000, \"img\": \"2.jpg\", \"availability\": 1, \"pages\": null, \"language\": \"English\", \"subcategoryId\": 1}"
+  },
+  {
+    "Id": "3",
+    "MessageBody": "{ \"bookId\": 3, \"title\": \"Building Construction\", \"author\": \"Nealan Sharma\", \"edition\": \"\", \"price\": 3500, \"img\": \"3.jpg\", \"availability\": 1, \"pages\": null, \"language\": \"English\", \"subcategoryId\": 2}"
+  }
+]
