@@ -84,7 +84,7 @@ Lambda will retry 3 times for asynchronous invocations, and if the 3rd time fail
 **Debug Errors**
 
 **Cleanup**  
-To delete the stacks
+To delete the stack
 
 ```bash
 $ aws cloudformation delete-stack --stack-name LambdaAsync

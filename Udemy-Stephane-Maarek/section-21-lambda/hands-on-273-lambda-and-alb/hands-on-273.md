@@ -38,7 +38,7 @@ Use the `AlbDnsName` to test the ALB + Lambda integration over a browser.
 **Debug Errors**
 
 **Cleanup**  
-To delete the stacks
+To delete the stack
 
 ```bash
 $ aws cloudformation delete-stack --stack-name LambdaAndAlb

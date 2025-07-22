@@ -1,0 +1,32 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "eu-west-2",
+      "eventTime": "2025-07-22T14:57:35.477Z",
+      "eventName": "ObjectCreated:Put",
+      "userIdentity": { "principalId": "AWS:AIDAUSJEUXM7ZM6DGARCI" },
+      "requestParameters": { "sourceIPAddress": "41.117.152.92" },
+      "responseElements": {
+        "x-amz-request-id": "7C0ZYT8AFG79B83F",
+        "x-amz-id-2": "uPX+ucQS3zvL4uV4g9ntAmeVmhT0f4Os11deSby9g+2bkSJGqVcUx/SrJGiO3AgIn8Z4pLqmki3INuJcpvsVB/uGHXuw8P8CgfIB62RnTrc="
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "ODkzZmJiYWMtOTJhOC00ZDBhLTk1Y2ItY2E0ZDNiYWYwZmZi",
+        "bucket": {
+          "name": "simple-bucket-2207",
+          "ownerIdentity": { "principalId": "A2LCLN7CCW212G" },
+          "arn": "arn:aws:s3:::simple-bucket-2207"
+        },
+        "object": {
+          "key": "images/donut.jpg",
+          "size": 71956,
+          "eTag": "68e2ebbf26d90127ffe8af3a9b442870",
+          "sequencer": "00687FA6DEEF70DD84"
+        }
+      }
+    }
+  ]
+}
