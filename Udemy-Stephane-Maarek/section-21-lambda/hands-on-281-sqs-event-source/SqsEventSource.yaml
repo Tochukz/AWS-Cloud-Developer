@@ -19,19 +19,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: LambdaSqsPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Sid: AllowSqsReceive
-                Effect: Allow
-                Action:
-                  - sqs:ReceiveMessage
-                  - sqs:DeleteMessage
-                  - sqs:GetQueueAttributes
-                Resource: !GetAtt SimpleQueue.Arn
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
 
   LambdaFunc:
     Type: AWS::Lambda::Function

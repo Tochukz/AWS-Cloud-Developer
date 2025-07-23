@@ -48,6 +48,14 @@ $ aws sqs send-message --queue-url <queue-url> --message-body file://message.jso
 
 Check the Lambda's log and `sample-sqs-event.json` for an example.
 
+3. Try to receive message from the Queue
+
+```bash
+$ aws sqs receive-message --queue-url <queue-url>
+```
+
+The queue should be empty because Lambda function automatically deletes the messages after processing.
+
 **Debug Errors**
 
 **Cleanup**  
