@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This configuration create a Lambda Sucess and Failure destination to asynchronous invocations
+
+Resources:
+  SuccessQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: success-queue
+
+  FailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: failure-queue
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+      Policies:
+        - PolicyName: LambdaSQSPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowSQSSendMessage
+                Effect: Allow
+                Action: sqs:SendMessage
+                Resource:
+                  - !GetAtt SuccessQueue.Arn
+                  - !GetAtt FailureQueue.Arn
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: DestinationFunc
+      Runtime: python3.9
+      Role: !GetAtt LambdaRole.Arn
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+            print(event)
+
+            if (event['action'] == 'error'): 
+              raise Exception('Error request!')
+
+            return {
+              'statusCode': 200,            
+              'body': json.dumps({
+                'message': 'Welcome to Lambda Destination'
+              }),
+            }
+
+  LambdaDestination:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref LambdaFunc
+      Qualifier: $LATEST # Lambda version, Alias or Latest
+      DestinationConfig:
+        OnSuccess:
+          Destination: !GetAtt SuccessQueue.Arn
+        OnFailure:
+          Destination: !GetAtt FailureQueue.Arn
+
+Outputs:
+  SuccessQueueUrl:
+    Description: URL of the SuccessQueue
+    Value: !GetAtt SuccessQueue.QueueUrl
+  FailureQueueUrl:
+    Description: URL of the FailureQueue
+    Value: !GetAtt FailureQueue.QueueUrl
