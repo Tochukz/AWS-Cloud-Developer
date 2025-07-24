@@ -17,3 +17,4 @@ env.sh
 output*
 node_modules
 dev-assoc-prac-test-2021.pdf
+log*
