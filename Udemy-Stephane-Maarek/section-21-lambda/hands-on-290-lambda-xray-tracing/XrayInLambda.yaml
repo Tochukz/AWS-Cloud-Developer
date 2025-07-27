@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This configuration enabled XRay for a Lambda function
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name
+    Default: chucks-workspace-storage
+  SourceCodeKey:
+    Type: String
+    Description: S3 key for the source code
+    Default: artifacts/lambda-code-27-07.zip
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SimpleFunc
+      Runtime: nodejs20.x
+      Handler: lambda.handler
+      Role: !GetAtt LambdaRole.Arn
+      TracingConfig:
+        Mode: Active # Active | PassThrough
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: !Ref SourceCodeKey
+
+  LambdaUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt LambdaFunc.Arn
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl #lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunc
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+
+Outputs:
+  FunctionUrl:
+    Description: URL for the Lambda function
+    Value: !GetAtt LambdaUrl.FunctionUrl
