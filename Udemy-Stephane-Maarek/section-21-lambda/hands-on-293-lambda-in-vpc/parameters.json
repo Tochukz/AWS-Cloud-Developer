@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-xxxxxx"
+  },
+  {
+    "ParameterKey": "PublicSubnet1",
+    "ParameterValue": "subnet-xxxx"
+  },
+  {
+    "ParameterKey": "PublicSubnet1Az",
+    "ParameterValue": "eu-west-2a"
+  }
+]

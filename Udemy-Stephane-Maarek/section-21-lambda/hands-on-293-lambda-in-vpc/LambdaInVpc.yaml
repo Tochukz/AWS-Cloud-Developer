@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This configuration puts a Lambda function in a private Subnet
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Existing VPC ID
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: Existing Subnet Id
+  PublicSubnet1Az:
+    Type: String
+    Description: Availability zone for the Subnet represented by PublicSubnet1
+  BucketName:
+    Type: String
+    Description: S3 bucket name
+    Default: chucks-workspace-storage
+  SourceCodeKey:
+    Type: String
+    Description: S3 key for the source code
+    Default: artifacts/lambda-code-27-07.zip
+
+Resources:
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt ElasticIp.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: LambdaSecurityGroup
+      GroupDescription: Allows all outgoing traffic
+      VpcId: !Ref VpcId
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VpcId
+      AvailabilityZone: !Ref PublicSubnet1Az
+      CidrBlock: 172.31.48.0/20
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VpcId
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      NatGatewayId: !Ref NatGateway
+      DestinationCidrBlock: 0.0.0.0/0
+
+  PrivateSubnetRouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: PrivateFunc
+      Runtime: nodejs20.x
+      Handler: lambda.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: !Ref SourceCodeKey
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt SecurityGroup.GroupId
+        SubnetIds:
+          - !GetAtt PrivateSubnet.SubnetId
+
+  LambdaUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt LambdaFunc.Arn
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl #lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunc
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+
+Outputs:
+  FunctionUrl:
+    Description: URL for the Lambda function
+    Value: !GetAtt LambdaUrl.FunctionUrl
