@@ -39,5 +39,6 @@ Section | Pg  | Title
 19      | 434 | AWS Integration & Messaging
 20      | 476 | AWS Monitoring, Troubleshooting & Audit
 21      | 534 | AWS Lambda
+22      | 610 | Amazon DynamoDB
 24      | 708 | AWS CICD
 25      | 746 | Serverless Application Model

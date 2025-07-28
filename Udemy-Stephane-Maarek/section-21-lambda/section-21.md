@@ -142,3 +142,6 @@ __Lambda Execution Role (IAM Role)__
   - `AWSXRayDaemonWriteAccess` – Upload trace data to X-Ray.
 * When you use an event source mapping to invoke your function, Lambda uses the execution role to read event data.
 * Best practice: create one Lambda Execution Role per function
+
+### Resources
+[AWS managed policies for AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/security-iam-awsmanpol.html)  
