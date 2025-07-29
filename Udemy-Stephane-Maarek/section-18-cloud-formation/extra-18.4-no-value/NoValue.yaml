@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Demonstrates the use of the AWS::NoValue Pseudo Parameter to not set a property at all when a condition is not met
+
+Parameters:
+  SetVersioningBucket1:
+    Type: String
+    Description: Whether versioning should be set on bucket1 or not
+    AllowedValues: [Yes, No]
+    Default: Yes
+  SetVersioningBucket2:
+    Type: String
+    Description: Whether versioning should be set on bucket2 or not
+    AllowedValues: [Yes, No]
+    Default: No
+
+Conditions:
+  ShouldSetVersioning1: !Equals [!Ref SetVersioningBucket1, Yes]
+  ShouldSetVersioning2: !Equals [!Ref SetVersioningBucket2, Yes]
+
+Resources:
+  SimpleBucket1:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: simple-bucket-30-07-1
+      VersioningConfiguration: !If
+        - ShouldSetVersioning1
+        - Status: Enabled
+        - !Ref AWS::NoValue
+
+  SimpleBucket2:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: simple-bucket-30-07-2
+      VersioningConfiguration: !If
+        - ShouldSetVersioning2
+        - Status: Enabled
+        - !Ref AWS::NoValue
