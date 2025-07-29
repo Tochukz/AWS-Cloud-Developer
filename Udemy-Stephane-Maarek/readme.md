@@ -40,5 +40,6 @@ Section | Pg  | Title
 20      | 476 | AWS Monitoring, Troubleshooting & Audit
 21      | 534 | AWS Lambda
 22      | 610 | Amazon DynamoDB
+23      | 664 | Amazon API Gateway
 24      | 708 | AWS CICD
 25      | 746 | Serverless Application Model

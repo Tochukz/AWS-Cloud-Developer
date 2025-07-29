@@ -1,4 +1,19 @@
 # Section 18: Cloud Formation
+__CloudFormation – Pseudo Parameters__  
+* AWS offers us Pseudo Parameters in any CloudFormation template
+* These can be used at any time and are enabled by default
+* Important pseudo parameters:
+
+Reference      | Value Example Returned Value
+---------------|-----------------------------
+AWS::AccountId | 123456789012
+AWS::Region    | us-east-1
+AWS::StackId   | `arn:aws:cloudformation:us-east-1:123456789012:stack/MyStack/1c2fa620-982a-
+11e3-aff7-50e2416294e0`
+AWS::StackName | MyStack
+AWS::NotificationARNs | [`arn:aws:sns:us-east-1:123456789012:MyTopic`]
+AWS::NoValue   | Doesn’t return a value
+
 __How to define a Condition__  
 ```yaml
 Conditions:

@@ -4,8 +4,8 @@
 
 This example demonstrates the use the the `AWS::NotificationARNs` pseudo parameter.
 
-The pseudo parameter `AWS::NotificationARNs` is used to get the SNS topic ARNs that are set to receive notification for stack events.  
-The notification ARN in question will be the same notfication ARN that was supplied during stack deployment operation using the `--notification-arns` option.
+The `AWS::NotificationARNs` pseudo parameter  is used to get the SNS topic ARNs that are set to receive notification for stack events.  
+The notification ARN in question will be the same notIfication ARN that was supplied during stack deployment operation using the `--notification-arns` option.
 
 ### Operation
 
