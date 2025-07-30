@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create API Gateway with integration to two Lambda functions
+
+Parameters:
+  StageName:
+    Type: String
+    Description: Stage name for the API Gateway deployment
+    Default: dev
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  MainFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: MainFunc
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+
+              print(event)
+
+              body = "Hello from Lambda!"
+              statusCode = 200
+              return {
+                  "statusCode": statusCode,
+                  "body": json.dumps(body),
+                  "headers": {
+                      "Content-Type": "application/json"
+                  }
+              }
+
+  HouseFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: HouseFunc
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+
+              print(event)
+
+              body = "Hello from my pretty house!"
+              statusCode = 200
+              return {
+                  "statusCode": statusCode,
+                  "body": json.dumps(body),
+                  "headers": {
+                      "Content-Type": "application/json"
+                  }
+              }
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: SimpleApi
+      EndpointConfiguration:
+        Types: [REGIONAL] # REGIONAL | EDGE  | PRIVATE
+
+  MainMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !GetAtt ApiGateway.RootResourceId
+      RestApiId: !Ref ApiGateway
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MainFunc.Arn}/invocations
+
+  HouseResource:
+    Type: "AWS::ApiGateway::Resource"
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: houses # "{proxy+}"
+
+  HouseMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !Ref HouseResource
+      RestApiId: !Ref ApiGateway
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HouseFunc.Arn}/invocations
+
+  MainLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref MainFunc
+      Principal: apigateway.amazonaws.com
+
+  HouseLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HouseFunc
+      Principal: apigateway.amazonaws.com
+
+  Deployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: [MainMethod, HouseMethod]
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref StageName
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/
