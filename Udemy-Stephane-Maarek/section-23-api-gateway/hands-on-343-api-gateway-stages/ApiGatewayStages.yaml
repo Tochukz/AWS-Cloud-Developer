@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create API Gateway with integration to two Lambda functions
+
+Parameters:
+  FunctionName:
+    Type: String
+    Description: The Function Name from the Lambda.yaml template
+    Default: MainFunc
+    AllowedValues:
+      - MainFunc
+
+Resources:
+  Version1Alias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      Name: prod
+      Description: Alias for Version 1 of the Lambda
+      FunctionName: !Ref FunctionName
+      FunctionVersion: 1
+
+  Version2Alias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      Name: test
+      Description: Alias for Version 2 of the Lambda
+      FunctionName: !Ref FunctionName
+      FunctionVersion: 2
+
+  LatestVersionAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      Name: dev
+      Description: Alias for latest version of the Lambda
+      FunctionName: !Ref FunctionName
+      FunctionVersion: $LATEST
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: SimpleApi
+      EndpointConfiguration:
+        Types: [REGIONAL] # REGIONAL | EDGE  | PRIVATE
+
+  MainMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !GetAtt ApiGateway.RootResourceId
+      RestApiId: !Ref ApiGateway
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub [
+            "arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${FunctionArn}:${!stageVariables.lambdaAlias}/invocations", # Use escape syntax ! to prevent CloudFormation trying to substitute stage variable stageVariables.lambdaAlias
+            {
+              FunctionArn: !ImportValue Lambda-FunctionArn, # arn:aws:lambda:${Region}:${AccountId}:function:${FunctionName}
+              Region: !Ref AWS::Region,
+              AccountId: !Ref AWS::AccountId,
+            },
+          ]
+
+  LambdaVersion1Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Version1Alias
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
+  #       !Sub arn:aws:execute-api:eu-west-2:314146339647:5atpk6k0sd/*/GET/
+  #       # !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
+  #       # arn:aws:execute-api:eu-west-2:314146339647:5atpk6k0sd/*/GET/
+  #       # arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
+
+  LambdaVersion2Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Version2Alias
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
+
+  LatestVersionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LatestVersionAlias
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
+
+  Deployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: MainMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: prod
+      StageDescription:
+        Variables:
+          lambdaAlias: prod
+
+  DevStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: dev
+      RestApiId: !Ref ApiGateway
+      DeploymentId: !Ref Deployment
+      Variables:
+        lambdaAlias: dev
+
+  TestgStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: test
+      RestApiId: !Ref ApiGateway
+      DeploymentId: !Ref Deployment
+      Variables:
+        lambdaAlias: test
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/
