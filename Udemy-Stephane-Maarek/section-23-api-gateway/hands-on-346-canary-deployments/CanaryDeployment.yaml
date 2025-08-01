@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: API Gateway with three stages routing traffic to different Lambda function Alias
+Description: Configure Canary Deployment for API Gateway Stage
 
 Resources:
   Version1Alias:
@@ -11,18 +11,10 @@ Resources:
       FunctionName: !ImportValue Lambda-FunctionName
       FunctionVersion: 1
 
-  Version2Alias:
-    Type: AWS::Lambda::Alias
-    Properties:
-      Name: test
-      Description: Alias for Version 2 of the Lambda
-      FunctionName: !ImportValue Lambda-FunctionName
-      FunctionVersion: 2
-
   LatestVersionAlias:
     Type: AWS::Lambda::Alias
     Properties:
-      Name: dev
+      Name: v2
       Description: Alias for latest version of the Lambda
       FunctionName: !ImportValue Lambda-FunctionName
       FunctionVersion: $LATEST
@@ -60,14 +52,6 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
 
-  LambdaVersion2Permission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref Version2Alias
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
-
   LatestVersionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -81,30 +65,27 @@ Resources:
     DependsOn: MainMethod
     Properties:
       RestApiId: !Ref ApiGateway
+      StageName: placeholder # real stage set below
+
+  ProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
       StageName: prod
-      StageDescription:
-        Variables:
-          lambdaAlias: prod
-
-  DevStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      StageName: dev
       RestApiId: !Ref ApiGateway
       DeploymentId: !Ref Deployment
       Variables:
-        lambdaAlias: dev
-
-  TestgStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      StageName: test
-      RestApiId: !Ref ApiGateway
-      DeploymentId: !Ref Deployment
-      Variables:
-        lambdaAlias: test
+        lambdaAlias: prod
+      CanarySetting:
+        DeploymentId: !Ref Deployment
+        PercentTraffic: 50 # In production it is usally meant to be small like 10%
+        UseStageCache: false
+        StageVariableOverrides:
+          lambdaAlias: v2
 
 Outputs:
   ApiEndpoint:
     Description: API Gateway endpoint URL
     Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/
+  DeploymentId:
+    Description: Deployment Id
+    Value: !Ref Deployment

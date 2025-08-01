@@ -2,6 +2,28 @@
 
 ### Description
 
+This configuration shows how different stages of the API Gateway can be mapped to different versions of a Lambda function via Lambda Aliases.
+
+First we deploy the Lambda function which is defined in the `Lambda.yaml` template.
+
+Next, we publish two new versions of the Lambda function while making changes to the code to make the versions distinguishable by their content. The new versions are published using the AWS CLI.
+
+Then we deploy the `ApiGatewayStages.yaml` template which contains the API Gateway stages which are mapped to Lambda Aliases that are pointing to different versions of the Lambda function.
+
+The final mapping of the stages to the lambda version looks like this:  
+`prod` stage -> Alias 1 -> Lambda Version 1  
+`test` stage -> Alias 2 -> Lambda Version 2  
+`dev` stage -> Alias 3 -> Lambda $Lastest version
+
+We use the `stageVariables.lambdaAlias` variable inside the API Gateway Method configuration `Uri` property have the stage name dynamically map to the appropriate Lambda Alias.
+
+For example  
+https://api-endpoint/dev -> dev stage -> $Lastest version  
+https://api-endpoint/test -> test stage -> Version 2  
+https://api-endpoint/prod -> pto stage -> Version 1
+
+Note that the stage name is case sensitive when being matched with the API Gateway endpoint, and that is why I use small letters for all the `StageName` properties in the `AWS::ApiGateway::Stage` resources.
+
 ### Operation
 
 **Before Deployment**
@@ -42,8 +64,7 @@ Deploy the stack
 1.  Deploy the `Lambda` stack
 
 ```bash
-$ aws cloudformation deploy --template-file Lambda.yaml  --stack-name Lambda --capabilities CAPABILITY_IAM
-# --disable-rollback
+$ aws cloudformation deploy --template-file Lambda.yaml  --stack-name Lambda --capabilities CAPABILITY_IAM --disable-rollback
 ```
 
 2. Go the the Lambda Console and test the Function to make sure it is in order.
@@ -69,14 +90,15 @@ $ aws lambda update-function-code --function-name MainFunc --s3-bucket chucks-wo
 
 We will not create a version 3 of the Lambda function but rather the `$LATEST` version will continue to point to version 3 of the code.
 
-6. You can go to the Lambda Console, take a look at the lastest version 3 code in the Code tab.  
+6. You can go to the Lambda Console, take a look at the lastest, version 3 code in the Code tab.  
    Then click on the _Versions_ tab to see version 1 and 2.  
    Each version should have a different code.
 
-7. Deploy yhe `ApiGatewayStages` stack
+7. Deploy the `ApiGatewayStages` stack
 
 ```bash
-$ aws cloudformation deploy --template-file ApiGatewayStages.yaml  --stack-name ApiGatewayStages  --disable-rollback
+$ aws cloudformation deploy --template-file ApiGatewayStages.yaml  --stack-name ApiGatewayStages
+# --disable-rollback
 ```
 
 **After Deployment**
@@ -88,18 +110,22 @@ $ aws cloudformation describe-stacks --stack-name ApiGatewayStages --query "Stac
 ```
 
 **Testing**  
-Use the `ApiEndpoint` to access the API Gateway on a browser.
-Test the route `/` and the `/houses` path on the `ApiEndpoint`
-For example:
+Test the endpoint for the three stages and confirm if their contents are different
 
-1. https://9r9v1ramv1.execute-api.eu-west-2.amazonaws.com/dev
-2. https://9r9v1ramv1.execute-api.eu-west-2.amazonaws.com/dev/houses
+1. https://2kvuvq95je.execute-api.eu-west-2.amazonaws.com/prod
+2. https://2kvuvq95je.execute-api.eu-west-2.amazonaws.com/test
+3. https://2kvuvq95je.execute-api.eu-west-2.amazonaws.com/dev
+
+The `prod` stage should contain the `version 1` code.  
+The `test` stage should contain the `version 2` code.  
+The `dev` stage should contain the `version 3` code which is the latest.
 
 **Debug Errors**
 
 **Cleanup**  
-To delete the stack
+To delete the stacks
 
 ```bash
-$ aws cloudformation delete-stack --stack-name BasicApiGateway
+$ aws cloudformation delete-stack --stack-name ApiGatewayStages
+$ aws cloudformation delete-stack --stack-name Lambda
 ```

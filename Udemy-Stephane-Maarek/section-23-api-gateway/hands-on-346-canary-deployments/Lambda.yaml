@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create a Lambda Function
+
+Parameters:
+  CodeArtifactBucket:
+    Type: String
+    Description: Existing S3 bucket for the code artifact
+    Default: chucks-workspace-storage
+  CodeArtifactKey:
+    Type: String
+    Description: S3 Object key for code artifact
+    Default: artifacts/lambda-stage-v1.zip
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  MainFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: MainFunc
+      Runtime: python3.9
+      Handler: lambda.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: !Ref CodeArtifactBucket
+        S3Key: !Ref CodeArtifactKey
+
+Outputs:
+  FunctionName:
+    Description: Name of the Lambda function
+    Value: !Ref MainFunc
+    Export:
+      Name: Lambda-FunctionName
+  FunctionArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt MainFunc.Arn
+    Export:
+      Name: Lambda-FunctionArn
