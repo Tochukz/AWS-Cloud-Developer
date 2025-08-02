@@ -43,3 +43,5 @@ Section | Pg  | Title
 23      | 664 | Amazon API Gateway
 24      | 708 | AWS CICD
 25      | 746 | Serverless Application Model
+26      | 758 | Cloud Development Kit (CDK)
+27      | 771 | Amazon Cognito

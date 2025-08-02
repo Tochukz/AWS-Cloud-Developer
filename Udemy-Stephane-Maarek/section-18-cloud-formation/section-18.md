@@ -1,4 +1,23 @@
 # Section 18: Cloud Formation
+__CloudFormation – Parameters Settings__  
+Parameters can be controlled by all these settings:
+* __Type:__
+  - String
+  - Number
+  - CommaDelimitedList
+  - List<Number>
+  - AWS-Specific Parameter (to help catch invalid values – match against existing values in the AWS account)
+  - List<AWS-Specific Parameter>
+  - SSM Parameter (get parameter value from SSM Parameter store)
+* __Description__
+* __ConstraintDescription__ (String)
+* __Min/MaxLength__
+* __Min/MaxValue__
+* __Default__
+* __AllowedValues__ (array)
+* __AllowedPattern__ (regex)
+* __NoEcho__ (Boolean)
+
 __CloudFormation – Pseudo Parameters__  
 * AWS offers us Pseudo Parameters in any CloudFormation template
 * These can be used at any time and are enabled by default
