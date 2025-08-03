@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates a Cognito User Pool
+
+Parameters:
+  CustomDomain:
+    Type: String
+    Description: Custom Domain for the User Pool Hosted UI
+    Default: myapp.goodguys.click
+  AcmCertificateArn: # This ACM certificate must be in us-east-1
+    Type: String
+    Description: Existing ACM certificate in the us-east-1 region
+  HostedZoneName:
+    Type: String
+    Description: Existing Route53 Hosted Zone Name
+    Default: goodguys.click
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: MyAppUsers
+      # MfaConfiguration: OPTIONAL
+      AutoVerifiedAttributes:
+        - email
+        # - phone_number
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      # SmsConfiguration:
+      #   ExternalId: "MyCognitoSMSExternalID"
+      #   SnsCallerArn: arn:aws:iam::123456789012:role/CognitoSNSRole # replace with your IAM role ARN
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: MyAppClient
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - https://example.com/callback
+      LogoutURLs:
+        - https://example.com/logout
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CustomDomain
+      UserPoolId: !Ref UserPool
+      ManagedLoginVersion: 2
+      CustomDomainConfig:
+        CertificateArn: !Ref AcmCertificateArn # This ACM certificate must be in us-east-1
+
+  RecordSet:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Ref CustomDomain
+      Type: CNAME
+      HostedZoneName: !Sub "${HostedZoneName}."
+      TTL: 3600 # in seconds, 3600s=1Hour
+      ResourceRecords:
+        - !GetAtt UserPoolDomain.CloudFrontDistribution
+
+Outputs:
+  UserPoolId:
+    Description: User Pool ID
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Description: User Pool Client ID
+    Value: !Ref UserPoolClient
+  CloudFrontDistribution:
+    Description: The CloudFront endpoint that you use as the target of the alias that you set up with your Domain Name Service (DNS) provider.
+    Value: !GetAtt UserPoolDomain.CloudFrontDistribution
