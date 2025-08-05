@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Step Function to demonstrate Error Handling
+
+Parameters:
+  S3Bucket:
+    Type: String
+    Description: S3 bucket where the definition of state machine is stored
+    Default: chucks-workspace-storage
+  S3Key:
+    Type: String
+    Description: The S3 key for the object that holds the state machine definition
+    Default: artifacts/state-machine-0408-1.json
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  LambdaFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: StepLambda
+      Runtime: nodejs20.x
+      Role: !GetAtt LambdaRole.Arn
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async function (event) {
+            const error = new Error('A custom error!');
+            error.name  = 'CustomError';
+            throw error;
+          };
+
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StateMachinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt LambdaFunc.Arn
+
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: SimpleMachine
+      RoleArn: !GetAtt StateMachineRole.Arn
+      StateMachineType: STANDARD # STANDARD | EXPRESS
+      DefinitionS3Location:
+        Bucket: !Ref S3Bucket
+        Key: !Ref S3Key
+      DefinitionSubstitutions:
+        ResourceArn: !GetAtt LambdaFunc.Arn

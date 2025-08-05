@@ -1,4 +1,4 @@
-# Lesson 404: Step Function Invoke Lambda - Hands On
+# Lesson 405: Step Function Invoke Lambda - Hands On
 
 ### Description
 
