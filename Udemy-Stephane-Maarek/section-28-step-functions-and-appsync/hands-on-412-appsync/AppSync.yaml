@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create an AppSync API backed by  a DynamoDB table
+
+Parameters:
+  SchemaS3Location:
+    Type: String
+    Description: S3 Location for the GraphQL Schema
+    Default: s3://chucks-workspace-storage/v0.0.1/schema.graphql
+  EpochInSeconds:
+    Type: Number
+    Description: Epoch time in seconds after which API Key will expire
+
+Resources:
+  BooksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Books
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  AppSyncApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: BooksApi
+      AuthenticationType: API_KEY
+
+  AppSyncApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Expires: !Ref EpochInSeconds
+
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      DefinitionS3Location: !Ref SchemaS3Location
+
+  AppSyncServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AppSyncDynamoDBAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Scan
+                Resource: !GetAtt BooksTable.Arn
+
+  DynamoDbDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: BooksDynamoSource
+      Type: AMAZON_DYNAMODB
+      DynamoDBConfig:
+        TableName: !Ref BooksTable
+        AwsRegion: !Ref AWS::Region
+      ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
+
+  GetBookResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: getBook
+      DataSourceName: !Ref DynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "GetItem",
+          "key": {
+            "id": { "S": "$ctx.args.id" }
+          }
+        }
+      ResponseMappingTemplate: "$util.toJson($ctx.result)"
+
+  ListBooksResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: listBooks
+      DataSourceName: !Ref DynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "Scan"
+        }
+      ResponseMappingTemplate: "$util.toJson($ctx.result.items)"
+
+  AddBookResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: addBook
+      DataSourceName: !Ref DynamoDbDataSource
+      RequestMappingTemplate: |
+        {
+          "version" : "2017-02-28",
+          "operation" : "PutItem",
+          "key" : {
+            "id" : { "S" : "$ctx.args.id" }
+          },
+          "attributeValues" : {
+            "title": { "S" : "$ctx.args.title" },
+            "author": { "S" : "$ctx.args.author" }
+          }
+        }
+      ResponseMappingTemplate: "$util.toJson($ctx.args)"
+
+Outputs:
+  GraphQLApiUrl:
+    Value: !GetAtt AppSyncApi.GraphQLUrl
+  GraphQLApiKey:
+    Value: !GetAtt AppSyncApiKey.ApiKey
+  BooksTableName:
+    Value: !Ref BooksTable
