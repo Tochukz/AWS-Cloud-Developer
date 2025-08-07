@@ -1,4 +1,4 @@
-# Lesson 432: SSM Parameter Store - Hands On
+# Lesson 431: SSM Parameter Store - Hands On
 
 ### Description
 
@@ -38,7 +38,8 @@ $ aws ssm get-parameters --names /myapp/dev/db-url /myapp/dev/db-password
 $ aws ssm get-parameters --names /myapp/dev/db-url /myapp/dev/db-password --with-decryption
 ```
 
-Note: Parameters of type SecureString are not supported by AWS CloudFormation.
+Note: Parameters of type SecureString are not supported by AWS CloudFormation.  
+To create Parameters of type SecureString, use AWS CLI.
 
 3. Get parameters by path
 

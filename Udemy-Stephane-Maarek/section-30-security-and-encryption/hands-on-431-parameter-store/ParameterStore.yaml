@@ -49,3 +49,4 @@ Resources:
       Value: !Ref ProdDbPassword
       Tier: Standard
 #!Important: Parameters of type SecureString are not supported by AWS CloudFormation.
+# To create Parameters of type SecureString, use AWS CLI
