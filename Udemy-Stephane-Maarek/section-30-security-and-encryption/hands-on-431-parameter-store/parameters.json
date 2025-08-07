@@ -1,0 +1,4 @@
+[
+  { "ParameterKey": "DevDbPassword", "ParameterValue": "pass1" },
+  { "ParameterKey": "ProdDbPassword", "ParameterValue": "pass2" }
+]

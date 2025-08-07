@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configure Parameters on Parameter Store
+
+Parameters:
+  DevDbPassword:
+    Type: String
+    Description: DB Password
+    NoEcho: true
+  ProdDbPassword:
+    Type: String
+    Description: DB Password
+    NoEcho: true
+
+Resources:
+  DevDbUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /myapp/dev/db-url
+      Description: Database URL for my app in development
+      Type: String
+      Value: dev.database.chucks.com:3306
+      Tier: Standard
+
+  DevDbPasswordParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /myapp/dev/db-password
+      Description: Database Password for my app in development
+      Type: String # String | StringList, Parameters of type SecureString are not supported by AWS CloudFormation.
+      Value: !Ref DevDbPassword
+      Tier: Standard # Standard | Advanced | Intelligent-Tiering
+
+  ProdDbUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /myapp/prod/db-url
+      Description: Database URL for my app in production
+      Type: String
+      Value: prod.database.chucks.com:3306
+      Tier: Standard
+
+  ProdDbPasswordParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /myapp/prod/db-password
+      Description: Database Password for my app in production
+      Type: String
+      Value: !Ref ProdDbPassword
+      Tier: Standard
+#!Important: Parameters of type SecureString are not supported by AWS CloudFormation.
