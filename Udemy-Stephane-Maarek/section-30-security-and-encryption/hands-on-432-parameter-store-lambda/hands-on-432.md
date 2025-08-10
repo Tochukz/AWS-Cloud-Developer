@@ -8,7 +8,7 @@ Here we show how the Parameters can be accessed inside a Lambda Function code.
 ### Operation
 
 **Before Deployment**  
-Deploy the Lambda code to S3 bucekt
+Deploy the Lambda code to S3 bucket
 
 ```bash
 $ ./deploy-code.sh
