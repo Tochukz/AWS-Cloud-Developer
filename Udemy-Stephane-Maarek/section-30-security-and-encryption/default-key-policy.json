@@ -1,0 +1,15 @@
+{
+  "Id": "Default policy when no policy is assigned",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permission",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam:<account-id>:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}

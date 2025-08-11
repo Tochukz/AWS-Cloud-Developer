@@ -1,0 +1,15 @@
+{
+  "Sid": "Allow Federated User"
+  "Effect": "Allow",
+  "Action": [
+    "kms:Encrypt",
+    "kms:Decrypt",
+    "kms:ReEncrypt*",
+    "kms:GenerateDataKey*",
+    "kms:DescribeKey",
+  ],
+  "Principal": {
+    "AWS": "arn:aws:sts::<account-id>:federated-user/user-name"
+  },
+  "Resource": "*"
+}
