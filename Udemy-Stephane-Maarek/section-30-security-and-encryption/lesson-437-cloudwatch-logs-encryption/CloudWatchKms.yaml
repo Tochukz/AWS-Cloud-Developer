@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configure CloudWatch Log with KMS Key
+
+Resources:
+  CloudWatchKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS Key for CloudWatch Logs
+      KeyUsage: ENCRYPT_DECRYPT
+      Origin: AWS_KMS
+      Enabled: true
+      PendingWindowInDays: 7
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+          - Sid: Allow CloudWatch Logs to use the key
+            Effect: Allow
+            Principal:
+              Service: !Sub logs.${AWS::Region}.amazonaws.com
+            Action:
+              - kms:Encrypt*
+              - kms:Decrypt*
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:Describe*
+            Resource: "*"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}"
+      KmsKeyId: !GetAtt CloudWatchKmsKey.Arn
+      RetentionInDays: 14
