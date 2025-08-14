@@ -32,6 +32,8 @@ Section | Pg  | Title
 8       | 140 | RDS, Aurora, & ElastiCache
 9       | 167 | Amazon Route 53
 12      | 241 | AWS CLI, SDK, IAM Roles & Policies
+13      | 255 | Amazon S3 – Advanced
+14      | 268 | Amazon S3 – Security
 15      | 288 | Amazon CloudFront
 16      | 319 | ECS, ECR and Fargate
 17      | 361 | AWS Elastic Beanstalk
@@ -45,3 +47,7 @@ Section | Pg  | Title
 25      | 746 | Serverless Application Model
 26      | 758 | Cloud Development Kit (CDK)
 27      | 771 | Amazon Cognito
+28      | 797 | Step Functions, App Sync
+29      | 818 | Advanced Identity in AWS
+30      | 840 | AWS Security & Encryption
+31      | 885 | Other AWS Services
