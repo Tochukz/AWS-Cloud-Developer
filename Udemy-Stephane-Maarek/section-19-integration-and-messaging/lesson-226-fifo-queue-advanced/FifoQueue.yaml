@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configure a Fifo Queue
+
+Resources:
+  FifoQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: simple-queue.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      DeduplicationScope: messageGroup # messageGroup | queue
+
+Outputs:
+  QueueUrl:
+    Description: URL of the source Queue
+    Value: !Ref FifoQueue
+  QueueArn:
+    Description: ARN of the source Queue
+    Value: !GetAtt FifoQueue.Arn
