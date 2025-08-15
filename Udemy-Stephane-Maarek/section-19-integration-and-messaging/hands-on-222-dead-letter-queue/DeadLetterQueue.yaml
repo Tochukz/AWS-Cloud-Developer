@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Dead Letter Queue with SQS
+
+Resources:
+  SimpleDlQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: simple-dl-queue
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  SimpleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: simple-queue
+      VisibilityTimeout: 5 # 5 seconds
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt SimpleDlQueue.Arn
+        maxReceiveCount: 3
+
+Outputs:
+  QueueUrl:
+    Description: URL of the source Queue
+    Value: !Ref SimpleQueue
+  QueueArn:
+    Description: ARN of the source Queue
+    Value: !GetAtt SimpleQueue.Arn
+  DlQueueUrl:
+    Description: URL of the Dead Letter Queue
+    Value: !Ref SimpleDlQueue
+  DlQueueArn:
+    Description: ARN of the Dead Letter Queue
+    Value: !GetAtt SimpleDlQueue.Arn
