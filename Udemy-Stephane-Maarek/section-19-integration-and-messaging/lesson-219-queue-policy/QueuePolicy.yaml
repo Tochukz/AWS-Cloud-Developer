@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create SNS Queue Policy to support S3 notification being sent to the Queue
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Name of the S3 Bucket to be created
+    Default: simple-bucket-1408
+
+Resources:
+  SimpleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: simple-queue
+
+  QueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref SimpleQueue
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action: sqs:SendMessage
+            Resource: !GetAtt SimpleQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Sub arn:aws:s3:::${BucketName}
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DependsOn: QueuePolicy
+    Properties:
+      BucketName: !Ref BucketName
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Queue: !GetAtt SimpleQueue.Arn
+            Event: s3:ObjectCreated:*
+            # Filter:
+            #   S3Key:
+            #     Rules:
+            #       - Name: suffix
+            #         Value: .txt
+
+Outputs:
+  QueueUrl:
+    Description: URL of the created SQS Queue
+    Value: !Ref SimpleQueue
