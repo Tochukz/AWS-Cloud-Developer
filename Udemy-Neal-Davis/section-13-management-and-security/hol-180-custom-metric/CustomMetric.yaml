@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Custom Metric for EC2 Instance
+
+Parameters:
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Default: DevSimpleKey
+  NotificationEmail:
+    Type: String
+    Description: Email address to receive notifications for the CloudWatch alarm
+
+Resources:
+  Ec2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CustomMetricPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: "*"
+
+  Ec2Profile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: SimpleEc2Profile
+      Roles:
+        - Ref: Ec2Role
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  SimpleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit for eu-west-2
+      IamInstanceProfile: !Ref Ec2Profile
+      KeyName: !Ref KeyPairName
+      SecurityGroups:
+        - !Ref SecurityGroup
+      Tags:
+        - Key: Name
+          Value: CustomMetricInstance
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          # Install stress utility
+          sudo dnf install stress-ng -y
+
+          # Install crond
+          sudo dnf install cronie -y 
+          sudo systemctl enable crond
+          sudo systemctl start crond
+
+  SimpleTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: CustomMetricTopic
+
+  SimpleSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref SimpleTopic
+      Protocol: email
+      Endpoint: !Ref NotificationEmail
+
+  SimpleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: HighMemoryUsage
+      AlarmDescription: Alarm when memory usage exceeds 80%
+      MetricName: MemUsage
+      Namespace: Custom/Memory
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 40
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref SimpleTopic
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref SimpleInstance
+
+Outputs:
+  PublicIP:
+    Description: Public IP of the EC2 instance
+    Value: !GetAtt SimpleInstance.PublicIp
+  InstanceId:
+    Description: Instance ID of the EC2 instance
+    Value: !Ref SimpleInstance
