@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create a Resources Group
+
+Resources:
+  SimpleGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name: SimpleGroup
+      Description: A simple resource group for development purposes
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+        Query:
+          ResourceTypeFilters:
+            - AWS::AllSupported # For all resource types
+          StackIdentifier: !ImportValue SimpleStackArn
+
+  AnotherGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name: AnotherGroup
+      Description: Just another resource group
+      ResourceQuery:
+        Type: TAG_FILTERS_1_0
+        Query:
+          ResourceTypeFilters:
+            - AWS::S3::Bucket
+            - AWS::SNS::Topic
+            - AWS::SQS::Queue
+            - AWS::EC2::Instance
+            - AWS::Lambda::Function
+          TagFilters:
+            - Key: Environment
+              Values:
+                - Development

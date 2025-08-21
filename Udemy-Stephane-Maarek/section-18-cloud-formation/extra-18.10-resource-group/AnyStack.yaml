@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: AWS CloudFormation template containing ramdon resource for development purposes.
+
+Resources:
+  SimpleBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: simple-bucket-2108
+      Tags:
+        - Key: Environment
+          Value: Development
+
+  SimpleTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: simple-topic-2108
+      Tags:
+        - Key: Environment
+          Value: Development
+
+  SimpleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: simple-queue-2108
+
+  SimpleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit for eu-west-2
+      Tags:
+        - Key: Name
+          Value: SimpleInstance
+        - Key: Environment
+          Value: Development
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda-execution-role-2108
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  SimpleLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: simple-lambda-function-2108
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Tags:
+        - Key: Environment
+          Value: Development
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log("Event: ", event);
+            return {
+              statusCode: 200,
+              body: JSON.stringify('Hello from Lambda!'),     
+            }
+          }
+
+Outputs:
+  StackArn:
+    Description: The ARN of the CloudFormation stack
+    Value: !Ref AWS::StackId
+    Export:
+      Name: SimpleStackArn
