@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Description": "Allow cross account access for SQS Queue",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Prinicpal": {
+        "AWS": "<account-id>"
+      },
+      "Action": ["sqs:ReceiveMessage"],
+      "Resource": "arn:aws:sqs:us-east-1:123456789:queue-name"
+    }
+  ]
+}

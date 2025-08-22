@@ -2,9 +2,9 @@
 
 ### Description
 
-This example is a continution of `hol-139-ec2-launch-type` and a variation of `hol-140-task-service-alb`
+This example is a continuation of `hol-139-ec2-launch-type` and a variation of `hol-140-task-service-alb`.   
 In `hol-139-ec2-launch-type` we created an ECS Cluster and registered an EC2 instance to serve as a _ECS Container Instance_.  
-Here we lauch an ECS Task, to run on the _ECS Container Instance_.  
+Here we launch an ECS Task, to run on the _ECS Container Instance_.  
 The ECS Task is a standalone task and is not managed by an ECS Service.
 
 An _ECS Container Instance_ is an EC2 instance that is running the _ECS-Optimized AMI_. It may also be called just _container instance_ in the context of an ECS cluster running an EC2 launch type.

@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Description": "Cognito Identity Pools - Policy variable on S3",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::mybucket"],
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["${cognito-identity.amazonaws.com:sub}/*"]
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Resource": ["arn:aws:s3:::mybucket/${cognito-identity.amazonaws.com:sub}/*"]
+    }
+  ]
+}

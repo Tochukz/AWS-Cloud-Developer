@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Description": "Allow S3 bucket to send Bucket Notification to Queue",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Prinicpal": {
+        "AWS": "*"
+      },
+      "Action": ["sqs:SendMessage"],
+      "Resource": "arn:aws:sqs:us-east-1:123456789:queue-name",
+      "Condition": {
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:s3:*:*:bucket-name",
+        },
+        "StringEquals": {
+          "aws:SourceAccount": "<bucket-owner-account-id>"
+        }
+      }
+    }
+  ]
+}

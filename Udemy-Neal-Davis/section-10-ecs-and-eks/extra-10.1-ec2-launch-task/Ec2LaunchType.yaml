@@ -94,7 +94,7 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: NginxFamily
-      NetworkMode: bridge # bridge, awsvpc. If you use awsvpc then the task will not have a public IP
+      NetworkMode: bridge # bridge, awsvpc. If you use awsvpc then the task is allocated an elastic network interface, and you must specify a NetworkConfiguration value when you create a service or run a task
       RequiresCompatibilities:
         - EC2
       RuntimePlatform:

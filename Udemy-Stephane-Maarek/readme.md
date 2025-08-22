@@ -21,7 +21,7 @@ And everything from Section 17 onwards
 __Content__  
 
 Section | Pg  | Title
---------|-----|--
+--------|-----|----------------------
 1       |  6  | Course Introduction
 2       |     | Code & Slides Download
 3       | 11  | Getting started with AWS
