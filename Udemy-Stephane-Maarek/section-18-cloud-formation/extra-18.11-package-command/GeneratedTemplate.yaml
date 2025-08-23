@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  LambdaFunctionWithAPI:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      CodeUri: s3://chucks-workspace-storage/templates/e59ace568248ee92757b0623b55c4044
