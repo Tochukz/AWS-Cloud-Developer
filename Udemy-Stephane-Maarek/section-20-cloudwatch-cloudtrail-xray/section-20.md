@@ -368,9 +368,6 @@ option_settings:
 __ECS + X-Ray integration options__  
 ![](slides/ecs-xray-integration-options.png)
 
-__ECS + X-Ray: Example Task Definition__  
-![](slides/ecs-xray-example-task-definition.png)
-
 
 __AWS Distro for OpenTelemetry__  
 * Secure, production-ready AWS-supported distribution of the open-source project OpenTelemetry project

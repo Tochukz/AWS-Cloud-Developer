@@ -2,7 +2,7 @@
 
 ### Description
 
-This  configuration is used to demonstrate the features that X-Ray provides.  
+This configuration is used to demonstrate X-Ray Tracing for a containerized application. X-Ray tracing is configured for containerized application running on ECS.   
 Here we deploy an Game application to an ECS container.  
 The Game application sends request to DynamoDB to store game score in DynamoDB tables and SNS topic for notification.  
 The X-Ray traces can then be viewed in the CloudWatch console after a game interaction.  
