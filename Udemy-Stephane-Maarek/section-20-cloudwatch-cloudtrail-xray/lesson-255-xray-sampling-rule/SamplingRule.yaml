@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create an X-Ray Sampling Rule
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  BasicFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: BasicFunc
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async(event) => {
+            const response = {
+              statusCode: 200,
+              body: 'Hello from Lambda',
+            };
+
+            return response;
+          };
+
+  SimpleRule:
+    Type: AWS::XRay::SamplingRule
+    Properties:
+      SamplingRule:
+        RuleName: BasicSamplingRule
+        ResourceARN: !GetAtt BasicFunc.Arn
+        Priority: 100
+        FixedRate: 0.05
+        ReservoirSize: 10
+        ServiceName: SimpleService
+        ServiceType: AWS::Lambda::Function
+        Host: goodguys.click
+        HTTPMethod: POST
+        URLPath: "*"
+        Version: 1
