@@ -1,9 +1,9 @@
-# Lesson 246: CloudWatch Logs - Metric Filter - Hands On
+# Lesson 251: Amazon Event Bridge Rule - Hands On
 
 ### Description
 
 This configuration creates an AWS Event Bridge Rule with a pattern that matches the _EC2 Instance State-change Notification_ event.  
-When an EC2 instance is stopped or terminated, the event triggers an SNS topics which sents out a notification to the subscribed email address.
+When an EC2 instance is stopped or terminated, the event triggers an SNS topics which sends out a notification to the subscribed email address.
 
 ### Operation
 

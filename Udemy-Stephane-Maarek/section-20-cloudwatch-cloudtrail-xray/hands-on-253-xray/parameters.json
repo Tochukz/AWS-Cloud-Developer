@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "Email",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpx-xxxxxxxxx"
+  },
+  {
+    "ParameterKey": "SubnetId1",
+    "ParameterValue": "subnet-xxxxxxxxx"
+  },
+  {
+    "ParameterKey": "SubnetId2",
+    "ParameterValue": "subnnet-yyyyyyyy"
+  }
+]
