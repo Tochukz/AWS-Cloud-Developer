@@ -6,7 +6,7 @@ In the configuration we use the Elastic Beanstak configuration resource, `AWS::E
 
 ### Operation
 
-**Before Deloyment**  
+**Before Deployment**  
 Copy the ExpressJS application to S3 bucket
 
 ```bash

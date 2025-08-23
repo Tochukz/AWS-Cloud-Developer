@@ -218,8 +218,8 @@ __X-Ray compatibility__
 __AWS X-Ray Leverages Tracing__    
 * Tracing is an end to end way to following a “request”
 * Each component dealing with the request adds its own “trace”
-* Tracing is made of segments (+ sub segments)
-* Annotations can be added to traces to provide extra-information
+* _Tracing is made of segments (+ sub segments)_
+* _Annotations can be added to traces to provide extra-information_
 * Ability to trace:
   - Every request
   - Sample request (as a % for example or a rate per minute)
@@ -258,15 +258,35 @@ __X-Ray Instrumentation in your code__
 * __Instrumentation__ means the measure of product’s performance, diagnose errors, and to write trace information.
 * To instrument your application code, you use the __X-Ray SDK__
 * Many SDK require only configuration changes
-* You can modify your application code to customize and annotation the data that the SDK sends to XRay, using _interceptors_, _filters_, _handlers_, _middleware_…
+* You can modify your application code to customize and add annotation to the data that the SDK sends to X-Ray, using _interceptors_, _filters_, _handlers_, _middleware_…
+
+```javascript
+// Example for Node.js and Express
+const app = express();
+const xray = require('aws-xray-sdk');
+app.use(xray.express.openSegment('MyApp'));
+
+app.get('/', function (req, res) {
+  res.render('index');
+});
+
+app.use(xray.express.closeSegment());
+```
 
 __X-Ray Concepts__  
-* __Segments:__ each application / service will send them
-* __Subsegments:__ if you need more details in your segment
+* __Segments:__ fundamental unit of trace data that represents _work done by a single service_ or resource handling a request.  
+A segment provides detailed information about a single component in your application (such as an API Gateway, Lambda function, or EC2 instance) as it processes part of a request.  
+Each segment records:
+  - _Start time_ and end time (duration of the operation)
+  - _Metadata_ (e.g., service name, version)
+  - _Annotations_ (custom key-value pairs for filtering)
+  - _Subsegments_ (for downstream calls like database or HTTP requests)
+  - _Errors or throttling details_
+* __Subsegments:__ Represents smaller units of work within a segment, like database calls or HTTP requests made by the Lambda.  
 * __Trace:__ segments collected together to form an end-to-end trace
 * __Sampling:__ decrease the amount of requests sent to X-Ray, reduce cost
 * __Annotations:__ Key Value pairs used to index traces and use with filters
-* __Metadata:__ Key Value pairs, not indexed, not used for searching
+* __Metadata:__ Key Value pairs, _not indexed_, not used for searching
 
 * The X-Ray daemon / agent has a config to send traces cross account:
   - make sure the IAM permissions are correct – the agent will assume the role
@@ -284,17 +304,64 @@ __X-Ray Custom Sampling Rules__
 
 ![](slides/xray-custom-sampling-rules.png)
 
+__X-Ray Write API (used by the X-Ray daemon)__   
+```JSON
+{
+  "Effect": "Allow",
+  "Action": [
+    "xray:PutTraceSegments",
+    "xray:PutTelemetryRecords",
+    "xray:GetSamplingRules",
+    "xray:GetSamplingTargets",
+    "xray:GetSamplingStatisticsSummaries"
+  ],
+  "Resources": ["*"]
+}
+```
+`arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess`
+
+* `PutTraceSegments`: Uploads segment documents to AWS X-Ray
+* `PutTelemetryRecords`: Used by the AWS X-Ray daemon to upload telemetry (for metrics).
+  - _SegmentsReceivedCount_, _SegmentsRejectedCounts_, _BackendConnectionErrors_ etc
+* `GetSamplingRules`: Retrieve all sampling rules (to know what/when to send)
+* `GetSamplingTargets` & `GetSamplingStatisticSummaries`: advanced
+* The X-Ray daemon needs to have an IAM policy authorizing the correct API calls to function correctly
+
+__X-Ray Read APIs__  
+```JSON
+{
+  "Effect": "Allow",
+  "Action": [
+    "xray:GetSamplingRules",
+    "xray:GetSamplingTargets",
+    "xray:GetSamplingStatisticsSummaries"
+    "xray:BatchGetTraces",
+    "xray:GetServiceGraph",
+    "xray:GetTraceGraph",
+    "xray:GetTraceSummaries",
+    "xray:GetGroups",
+    "xray:GetGroup",
+    "xray:GetTimeSeriesServiceStatistics"
+  ],
+  "Resources": ["*"]
+}
+```
+A subset of `arn:aws:iam::aws:policy/AWSXrayReadOnlyAccess`  
+
+* `GetServiceGraph`: main graph
+* `BatchGetTraces`: Retrieves a list of traces specified by ID. Each trace is a collection of segment documents that originates from a single request.
+* `GetTraceSummaries`: Retrieves IDs and annotations for traces available for a specified time frame using an optional filter. To get the full traces, pass the trace IDs to BatchGetTraces.
+* `GetTraceGraph`: Retrieves a service graph for one or more specific trace IDs.
+
 __X-Ray with Elastic Beanstalk__   
 * AWS Elastic Beanstalk platforms include the X-Ray daemon
-* You can run the daemon by setting an option in the Elastic Beanstalk console
-or with a configuration file (in `.ebextensions/xray-daemon.config`)
+* You can run the daemon by setting an option in the Elastic Beanstalk console or with a configuration file (in `.ebextensions/xray-daemon.config`)
 ```yaml
 option_settings:
     aws:elasticbeanstalk:xray:
         XRayEnabled: true  
 ```
-* Make sure to give your instance profile the correct IAM permissions so that
-the X-Ray daemon can function correctly
+* Make sure to give your instance profile the correct IAM permissions so that the X-Ray daemon can function correctly
 * Then make sure your application code is instrumented with the X-Ray SDK
 * __Note:__ The X-Ray daemon is not provided for Multicontainer Docker
 

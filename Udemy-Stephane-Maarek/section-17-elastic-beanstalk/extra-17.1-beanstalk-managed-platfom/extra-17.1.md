@@ -16,7 +16,7 @@ $ aws elasticbeanstalk list-platform-versions --query "PlatformSummaryList[].{Ca
 
 ### Operation
 
-**Before Deloyment**  
+**Before Deployment**  
 Copy the ExpressJS application to S3 bucket
 
 ```bash

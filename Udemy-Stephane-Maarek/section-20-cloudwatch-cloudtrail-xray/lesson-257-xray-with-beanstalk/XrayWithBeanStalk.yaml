@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Enable X-Ray tracing for an Elastic Beanstalk Application
+
+Parameters:
+  CNamePrefix:
+    Type: String
+    Description: A prefix for the Environment DNS name
+    Default: xray-demo
+  PlatformArn:
+    Type: String
+    Description: Platform ARN
+    Default: arn:aws:elasticbeanstalk:eu-west-2::platform/Node.js 22 running on 64bit Amazon Linux 2023/6.6.0
+    # To vew list of custom Platforms, run the list-platform-versions command:
+    # $ aws elasticbeanstalk list-platform-versions
+
+Resources:
+  Application:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: NodeApp
+      Description: A demo node application
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BeanstackAppRole
+      Description: Role for Elastic Beanstalk environment
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier # Optional
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess # Required for X-Ray
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: BeanstalkInstanceProfile
+      Roles:
+        - !Ref EC2InstanceRole
+
+  Environment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      EnvironmentName: SimpleNodeDevEnv
+      ApplicationName: !Ref Application
+      Description: A demo node application development environment
+      PlatformArn: !Ref PlatformArn
+      CNAMEPrefix: !Ref CNamePrefix
+      Tier:
+        Name: WebServer # or Worker for worker tier
+        Type: Standard # or SQS/HTTP for worker tier
+      OptionSettings:
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: DisableIMDSv1 # Makes the resource use LaunchTemplate instead of LaunchConfiguration which has been depreated
+          Value: true
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value: !Ref EC2InstanceProfile
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: t2.micro
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: SingleInstance # or SingleInstance | LoadBalanced
+        - Namespace: aws:elasticbeanstalk:xray
+          OptionName: XRayEnabled
+          Value: true
+      # See more configuration options here https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options.html
+
+Outputs:
+  EnvironmentUrl:
+    Description: Endpoint URL of the Elastic Beanstalk development environment
+    Value: !Sub "http://${CNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
+  PublicIp:
+    Description: Public IP of Single ECS instance in development environment
+    Value: !GetAtt Environment.EndpointURL
