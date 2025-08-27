@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Elastic Beanstalk Single-Container Docker App using ECR Image
+
+Parameters:
+  S3Bucket:
+    Type: String
+    Description: S3 bucket where a zipped package containing the Dockerrun.aws.json is stored
+    Default: chucks-workspace-storage
+  PackageS3Key:
+    Type: String
+    Description: S3 key for the zipped package containing the Dockerrun.aws.json
+    Default: artifacts/docker-package-2708.zip
+  EcrImageUrl:
+    Type: String
+    Description: ECR Image URL (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest)
+  PlatformArn:
+    Type: String
+    Description: The platform ARN for a custom platform
+    Default: "arn:aws:elasticbeanstalk:eu-west-2::platform/Docker running on 64bit Amazon Linux 2023/4.7.0"
+    # aws elasticbeanstalk list-platform-versions > output-platform-versions.json
+    # Search for ''"PlatformCategory": "Docker"'
+  CNamePrefix:
+    Type: String
+    Description: A prefix for the Environment DNS name
+    Default: simple-app
+
+Resources:
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        # - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+
+  Application:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: SimpleNestApp
+      Description: Single-container Docker app using ECR image
+
+  AppVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties:
+      ApplicationName: !Ref Application
+      Description: Initial version
+      SourceBundle:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref PackageS3Key
+
+  Environment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      EnvironmentName: SimpleEnvr
+      ApplicationName: !Ref Application
+      PlatformArn: !Ref PlatformArn
+      VersionLabel: !Ref AppVersion
+      CNAMEPrefix: !Ref CNamePrefix
+      OptionSettings:
+        # - Namespace: aws:elasticbeanstalk:application:environment
+        #   OptionName: AWS_EB_DOCKER_IMAGE
+        #   Value: !Ref EcrImageUrl # Not needed with Dockerrun.aws.json v2
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: t2.micro
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value: !Ref InstanceProfile
+
+Outputs:
+  EnvironmentUrl:
+    Description: Endpoint URL of the Elastic Beanstalk environment
+    Value: !Sub "http://${CNamePrefix}.${AWS::Region}.elasticbeanstalk.com"
+  EndpointUrl:
+    Description: "Elastic Beanstalk Environment URL"
+    Value: !GetAtt Environment.EndpointURL
