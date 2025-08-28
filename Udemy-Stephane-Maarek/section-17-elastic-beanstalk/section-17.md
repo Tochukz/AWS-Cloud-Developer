@@ -149,3 +149,18 @@ __Elastic Beanstalk Migration: Decouple RDS__
 4. Perform a CNAME swap (blue/green) or Route 53 update, confirm working
 5. Terminate the old environment (RDS won’t be deleted)
 6. Delete CloudFormation stack (in DELETE_FAILED state)
+
+__Single-container Docker Vs Multi-container Docker on Elastic Beanstalk__  
+* ✅ __Single-Container Docker on Elastic Beanstalk__
+  - Uses Docker directly on EC2 instances, not ECS.
+  - The EB platform launches EC2 instances, installs Docker, and runs your one container.
+  - No ECS cluster, no ECS task definitions, no ECS service.
+  - Scaling is managed by Elastic Beanstalk Auto Scaling groups, not ECS.
+
+* ✅ __Multi-Container Docker on Elastic Beanstalk__
+  - Uses ECS (Amazon Elastic Container Service) under the hood.
+  - EB provisions an ECS cluster and registers each environment instance as a container instance.
+  - Containers are defined in Dockerrun.aws.json (v2) → EB converts it to an ECS task definition.
+  - ECS schedules and manages the containers on EC2 instances within the EB environment.
+
+  Still uses EC2 (not Fargate) unless you migrate manually.
