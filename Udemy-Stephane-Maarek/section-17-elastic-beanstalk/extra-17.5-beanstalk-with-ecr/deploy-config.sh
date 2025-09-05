@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 # Deploys a zipped configuration directory to S3
 
 config_dir=$1

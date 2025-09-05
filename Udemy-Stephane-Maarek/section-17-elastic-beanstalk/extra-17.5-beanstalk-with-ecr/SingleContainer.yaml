@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Elastic Beanstalk Single-Container Docker App using DockerHub image
+Description: Elastic Beanstalk Single-Container Docker App using ECR Image
 
 Parameters:
   S3Bucket:
@@ -11,15 +11,15 @@ Parameters:
     Type: String
     Description: S3 key for the zipped package containing the Dockerrun.aws.json
     Default: artifacts/nginx-container-config.zip
-  # DockerImage:
+  # EcrImageUrl:
   #   Type: String
-  #   Description: Docker image e.g nginx:latest
+  #   Description: ECR Image URL (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest)
   PlatformArn:
     Type: String
     Description: The platform ARN for a custom platform
     Default: "arn:aws:elasticbeanstalk:eu-west-2::platform/Docker running on 64bit Amazon Linux 2023/4.7.0"
     # aws elasticbeanstalk list-platform-versions > output-platform-versions.json
-    # Search for '"PlatformCategory": "Docker"'
+    # Search for ''"PlatformCategory": "Docker"'
   CNamePrefix:
     Type: String
     Description: A prefix for the Environment DNS name
@@ -42,6 +42,8 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        # - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -86,7 +88,7 @@ Resources:
       OptionSettings:
         # - Namespace: aws:elasticbeanstalk:application:environment
         #   OptionName: AWS_EB_DOCKER_IMAGE
-        #   Value: !Ref DockerImage # Not needed because we are using Dockerrun.aws.json v1 instead
+        #   Value: !Ref EcrImageUrl # Not needed because we are using Dockerrun.aws.json v2 instead
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: InstanceType
           Value: t2.micro
