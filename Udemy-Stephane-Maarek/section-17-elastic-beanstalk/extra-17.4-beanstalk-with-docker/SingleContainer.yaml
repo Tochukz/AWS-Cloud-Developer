@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+
 Description: Elastic Beanstalk Single-Container Docker App using ECR Image
 
 Parameters:
@@ -9,10 +10,10 @@ Parameters:
   PackageS3Key:
     Type: String
     Description: S3 key for the zipped package containing the Dockerrun.aws.json
-    Default: artifacts/docker-package-2708.zip
-  EcrImageUrl:
-    Type: String
-    Description: ECR Image URL (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest)
+    Default: artifacts/nginx-container-config.zip
+  # DockerImage:
+  #   Type: String
+  #   Description: ECR Image URL (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest)
   PlatformArn:
     Type: String
     Description: The platform ARN for a custom platform
@@ -23,6 +24,10 @@ Parameters:
     Type: String
     Description: A prefix for the Environment DNS name
     Default: simple-app
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Default: DevSimpleKey
 
 Resources:
   InstanceRole:
@@ -37,8 +42,6 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-        # - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -61,6 +64,17 @@ Resources:
         S3Bucket: !Ref S3Bucket
         S3Key: !Ref PackageS3Key
 
+  EBInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: EBInstanceSG
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
   Environment:
     Type: AWS::ElasticBeanstalk::Environment
     Properties:
@@ -72,13 +86,19 @@ Resources:
       OptionSettings:
         # - Namespace: aws:elasticbeanstalk:application:environment
         #   OptionName: AWS_EB_DOCKER_IMAGE
-        #   Value: !Ref EcrImageUrl # Not needed with Dockerrun.aws.json v2
+        #   Value: !Ref DockerImage # Not needed because we are using Dockerrun.aws.json v1 instead
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: InstanceType
           Value: t2.micro
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: IamInstanceProfile
           Value: !Ref InstanceProfile
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: EC2KeyName
+          Value: !Ref KeyPairName
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: SecurityGroups
+          Value: !Ref EBInstanceSG
 
 Outputs:
   EnvironmentUrl:

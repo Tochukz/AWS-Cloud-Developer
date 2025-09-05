@@ -1,6 +1,9 @@
-# Extra 17.4: Multi-Container Beanstalk Application
+# Extra 17.4: Single Container Beanstalk Application
 
 ### Description
+
+This example configures a Docker Application in an Elastic Beanstalk Environment. It uses a single container and deploys it using the _v1_ syntax of the `Dockerrun.aws.json` file.  
+The docker application is a simple Nginx web server that serves the default Nginx welcome page.
 
 ### Operation
 
@@ -8,11 +11,10 @@
 Package the `Dockerrun.aws.json` file into a zip file and upload to S3
 
 ```bash
-$ zip -r docker-package.zip Dockerrun.aws.json
-$ aws s3 cp docker-package.zip s3://chucks-workspace-storage/artifacts/docker-package-2708.zip
+$ ./deploy-config.sh ngix-container-config-v1
 ```
 
-**Deployment**
+**Deployment**  
 Lint the templates
 
 ```bash
@@ -32,10 +34,25 @@ Get the `EnvironmentUrl` and `EndpointUrl` from the Stack outputs
 $ aws cloudformation describe-stacks --stack-name SingleContainer --query "Stacks[0].Outputs" --no-cli-pager
 ```
 
-**Testing**
-Use the `EnvironmentUrl` or `EndpointUrl` to access the application over a browser.
+**Testing**  
+Use the `EnvironmentUrl` or `EndpointUrl` to access the application on a browser.
 
-**Debug Errors**
+**Debug Errors**  
+If the application does not work as expected your can debug by SSHing into the EC2 instance.
+
+```bash
+# SSH into the EC2 instance
+$ ssh -i Udemy-Neal-Davis/dev-simple-key.pem ec2-user@3.8.191.0
+
+# Check the running docker containers
+$ sudo docker ps
+
+# Check the docker images that have been pulled
+$ sudo docker images
+
+# Check if the application is running locally on the instance
+$ curl localhost
+```
 
 **Cleanup**  
 To delete the stacks
