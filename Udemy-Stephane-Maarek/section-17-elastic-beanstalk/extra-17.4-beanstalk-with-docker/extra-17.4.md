@@ -11,11 +11,11 @@ The docker application is a simple Nginx web server that serves the default Ngin
 Package the `Dockerrun.aws.json` file into a zip file and upload to S3
 
 ```bash
-$ ./deploy-config.sh ngix-container-config-v1
+$ ./deploy-config.sh nginx-container-config-v1
 ```
 
 **Deployment**  
-Lint the templates
+Lint the template
 
 ```bash
 $ cfn-lint SingleContainer.yaml
@@ -38,7 +38,7 @@ $ aws cloudformation describe-stacks --stack-name SingleContainer --query "Stack
 Use the `EnvironmentUrl` or `EndpointUrl` to access the application on a browser.
 
 **Debug Errors**  
-If the application does not work as expected your can debug by SSHing into the EC2 instance.
+If the application did not work as expected your can debug by SSHing into the EC2 instance.
 
 ```bash
 # SSH into the EC2 instance

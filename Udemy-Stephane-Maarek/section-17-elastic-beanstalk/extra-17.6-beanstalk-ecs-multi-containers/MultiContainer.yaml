@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Elastic Beanstalk Single-Container Docker App using DockerHub image
+Description: Elastic Beanstalk Multi-Container Application which uses ECS under the hood
 
 Parameters:
   S3Bucket:
@@ -10,16 +10,13 @@ Parameters:
   PackageS3Key:
     Type: String
     Description: S3 key for the zipped package containing the Dockerrun.aws.json
-    Default: artifacts/nginx-container-config.zip
-  # DockerImage:
-  #   Type: String
-  #   Description: Docker image e.g nginx:latest
-  PlatformArn:
+    Default: artifacts/multi-container-config.zip
+  SolutionStackName:
     Type: String
-    Description: The platform ARN for a custom platform
-    Default: "arn:aws:elasticbeanstalk:eu-west-2::platform/Docker running on 64bit Amazon Linux 2023/4.7.0"
-    # aws elasticbeanstalk list-platform-versions > output-platform-versions.json
-    # Search for '"PlatformCategory": "Docker"'
+    Description: The soluton stack name to use
+    Default: "64bit Amazon Linux 2023 v4.2.4 running ECS"
+    # aws elasticbeanstalk list-available-solution-stacks --query "SolutionStacks"
+    # Search for "running ECS"
   CNamePrefix:
     Type: String
     Description: A prefix for the Environment DNS name
@@ -42,6 +39,9 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        # - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -52,8 +52,8 @@ Resources:
   Application:
     Type: AWS::ElasticBeanstalk::Application
     Properties:
-      ApplicationName: !Sub "${AWS::StackName}NestApp"
-      Description: Single-container Docker app using public DockerHub image
+      ApplicationName: SimpleNestApp
+      Description: Multi-container Docker app using public DockerHub images
 
   AppVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
@@ -67,12 +67,16 @@ Resources:
   EBInstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${AWS::StackName}EBInstanceSG"
-      GroupDescription: Enable SSH access via port 22
+      GroupName: EBInstanceSG
+      GroupDescription: Enable SSH access and MySQL access
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
           CidrIp: 0.0.0.0/0
 
   Environment:
@@ -80,13 +84,10 @@ Resources:
     Properties:
       EnvironmentName: !Sub "${AWS::StackName}Env"
       ApplicationName: !Ref Application
-      PlatformArn: !Ref PlatformArn
+      SolutionStackName: !Ref SolutionStackName
       VersionLabel: !Ref AppVersion
       CNAMEPrefix: !Ref CNamePrefix
       OptionSettings:
-        # - Namespace: aws:elasticbeanstalk:application:environment
-        #   OptionName: AWS_EB_DOCKER_IMAGE
-        #   Value: !Ref DockerImage # Not needed because we are using Dockerrun.aws.json v1 instead
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: InstanceType
           Value: t2.micro

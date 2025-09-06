@@ -164,3 +164,6 @@ __Single-container Docker Vs Multi-container Docker on Elastic Beanstalk__
   - ECS schedules and manages the containers on EC2 instances within the EB environment.
 
   Still uses EC2 (not Fargate) unless you migrate manually.
+
+### Resources
+[Elastic Beanstalk Options](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html)   

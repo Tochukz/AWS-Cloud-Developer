@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "PackageS3Key",
+    "ParameterValue": "artifacts/v0.0.2/multi-container-config.zip"
+  },
+  {
+    "ParameterKey": "CNamePrefix",
+    "ParameterValue": "multi-container"
+  }
+]

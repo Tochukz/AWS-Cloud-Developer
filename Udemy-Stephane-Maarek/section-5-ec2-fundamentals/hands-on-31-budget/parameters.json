@@ -6,5 +6,9 @@
   {
     "ParameterKey": "SubscriberEmail2",
     "ParameterValue": "your-subscriber-email-2"
+  },
+  {
+    "ParameterKey": "BudgetAmount",
+    "ParameterValue": "20"
   }
 ]
