@@ -61,7 +61,7 @@ If the application does not work as expected your can debug by SSHing into the E
 
 ```bash
 # SSH into the EC2 instance
-$ ssh -i Udemy-Neal-Davis/dev-simple-key.pem ec2-user@3.8.191.0
+$ ssh -i dev-simple-key.pem ec2-user@3.8.191.0
 
 # Check the running docker containers
 $ sudo docker ps

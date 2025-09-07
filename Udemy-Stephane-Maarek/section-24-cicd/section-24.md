@@ -137,6 +137,59 @@ __CodeDeploy – Redeploy & Rollbacks__
 * If a roll back happens, CodeDeploy redeploys the last known good
 revision as a new deployment (not a restored version)
 
+#### Code Deploy LifeCycle Hooks
+__For EC2 / On-Premises Deployments__  
+When you deploy an application to an EC2 instance or on-prem server, CodeDeploy runs hooks in this order:
+1. ApplicationStop
+  - Run before the new version is installed.
+  - Typically stops the current application or service.
+2. DownloadBundle (not a hook, CodeDeploy action)
+  - CodeDeploy agent downloads the revision bundle.
+3. BeforeInstall
+ - Prepare the instance (e.g., backup files, install dependencies).
+4. Install (not a hook, CodeDeploy action)
+  - CodeDeploy agent copies the new revision to the instance.
+5. AfterInstall
+  - Final tweaks (e.g., change file permissions, config setup).
+6. ApplicationStart
+  - Start the new application or service.
+7. ValidateService
+  - Run validation tests to ensure the deployment succeeded.
+
+The following code snippet shows a valid example of the structure of hooks for an _EC2/on-premise_ deployment:
+```yaml
+Hooks:
+  - ApplicationStop: "LambdaFunction"
+  - BeforeInstall: "LambdaFunctionToValidateBeforeInstall"
+  - AfterInstall: "LambdaFunctionToValidateAfterInstall"
+  - ApplicationStart: "LambdaFunctionToStartTheApplication"
+  - ValidateService: "LambdaFunctionToValidateService"
+```
+
+__For ECS Deployments (Blue/Green or Rolling)__  
+ECS deployments have fewer hooks since the lifecycle is containerized:
+1. BeforeInstall
+  - Runs before the new task set is created.
+2. AfterInstall
+  - Runs after the new task set is created, but before traffic is shifted.
+3. AfterAllowTestTraffic (only for blue/green)
+  - Runs after test traffic is routed to the new task set.
+4. BeforeAllowTraffic
+  - Runs before shifting production traffic to the new task set.
+5. AfterAllowTraffic
+  - Runs after production traffic has been shifted.
+
+
+The following code snippet shows a valid example of the structure of hooks for an _Amazon ECS_ deployment:
+```yaml
+Hooks:
+  - BeforeInstall: "LambdaFunctionToValidateBeforeInstall"
+  - AfterInstall: "LambdaFunctionToValidateAfterTraffic"
+  - BeforeAllowTestTraffic: "LambdaFunctionToValidateAfterTestTrafficStarts"
+  - BeforeAllowTraffic: "LambdaFunctionToValidateBeforeAllowingProductionTraffic"
+  - AfterAllowTraffic: "LambdaFunctionToValidateAfterAllowingProductionTraffic"
+```
+
 ## AWS CodeArtifact
 __Introduction__  
 * Software packages depend on each other to be built (also called code dependencies), and new ones are created
