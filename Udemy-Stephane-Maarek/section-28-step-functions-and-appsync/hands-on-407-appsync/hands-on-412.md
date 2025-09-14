@@ -5,6 +5,8 @@
 Create an AppSync GraphQL API that is backed by a DynamoDB table.
 The GraphQL API has three resolvers to support `getBook`, `listBooks` and `addBook` operations.
 
+<!-- This configuration is currently not working -->
+
 ### Operation
 
 **Before Deployment**

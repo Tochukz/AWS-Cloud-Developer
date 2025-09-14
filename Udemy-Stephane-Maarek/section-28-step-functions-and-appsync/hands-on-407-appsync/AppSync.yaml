@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 
 Description: Create an AppSync API backed by  a DynamoDB table
 
+# This configuration is currently not working
+
 Parameters:
   SchemaS3Location:
     Type: String

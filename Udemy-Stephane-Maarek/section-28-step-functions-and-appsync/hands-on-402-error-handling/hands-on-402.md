@@ -1,4 +1,4 @@
-# Lesson 407: Error Handling - Hands On
+# Lesson 402: Step Functions - Error Handling - Hands On
 
 ### Description
 
