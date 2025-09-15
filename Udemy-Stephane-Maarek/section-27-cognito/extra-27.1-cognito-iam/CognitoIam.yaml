@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Cognito Identity Pool with IAM policy restricting users to their own S3 folder
+
+Resources:
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: simple-users-bucket
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: simple-user-pool
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: simple-app-client
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: simple-app-identity-pool
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !GetAtt UserPool.ProviderName
+
+  # IAM Role for Authenticated Users
+  CognitoAuthRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref IdentityPool
+              "ForAnyValue:StringLike":
+                cognito-identity.amazonaws.com:amr: authenticated
+
+  # Attach IAM Policy to restrict users to their folder
+  CognitoAuthPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: S3RestrictionPolicy
+      Roles:
+        - !Ref CognitoAuthRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource: !Sub arn:aws:s3:::${FilesBucket}/${!cognito-identity.amazonaws.com:sub}/*
+          - Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !GetAtt FilesBucket.Arn
+            Condition:
+              StringLike:
+                s3:prefix: "${cognito-identity.amazonaws.com:sub}/*"
+
+  # Attach Role to Identity Pool
+  IdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthRole.Arn
+
+Outputs:
+  IdentityPoolId:
+    Description: Identity Pool ID
+    Value: !Ref IdentityPool
+  UserPoolId:
+    Description: User Pool ID
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Description: User Pool Client ID
+    Value: !Ref UserPoolClient
+# 🔑 How it Works
+
+# When a user logs in via Cognito User Pool → they get an Identity ID from the Identity Pool.
+# IAM policy uses ${cognito-identity.amazonaws.com:sub} as a folder prefix in S3.
+# Example:
+# ```
+# s3://myapp-user-files/ap-south-1:12345678-aaaa-bbbb-cccc-ddddeeeeffff/myfile.png
+# ```
+# The user can only PutObject, GetObject, or DeleteObject inside their own folder.
+# The ListBucket permission is scoped so they only see their own prefix.
+
+# ⚡ This setup is scalable, secure, and efficient — users upload/download directly to S3 without Lambda/API Gateway bottlenecks.
