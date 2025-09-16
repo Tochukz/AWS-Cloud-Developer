@@ -15,8 +15,12 @@ app.use(function (err, req, res, next) {
   ({ message, status } = err);
   console.log("Error code:", err.code);
 
-  if (err.code == "UserNotFoundException") {
+  const errorCodes = ["UserNotFoundException", "UserNotConfirmedException"];
+  if (errorCodes.includes(err.code)) {
     status = 400;
+  }
+  if (err.code === "NotAuthorizedException") {
+    status = 401;
   }
 
   console.log("error", err);

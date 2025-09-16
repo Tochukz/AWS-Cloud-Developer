@@ -8,6 +8,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.888.0",
     "@aws-sdk/credential-providers": "^3.888.0",
+    "@aws-sdk/s3-request-presigner": "^3.888.0",
     "amazon-cognito-identity-js": "^6.3.15",
     "dotenv": "^17.2.2",
     "express": "^5.1.0"

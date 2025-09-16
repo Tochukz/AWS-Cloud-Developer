@@ -10,14 +10,35 @@ const router = express.Router();
 
 const { S3_BUCKET, USER_POOL_ID, USER_POOL_CLIENT_ID } = process.env;
 
-router.post("/register", async (req, res) => {});
+const userPool = new CognitoUserPool({
+  UserPoolId: USER_POOL_ID,
+  ClientId: USER_POOL_CLIENT_ID,
+});
+
+router.post("/register", async (req, res) => {
+  const { username, password, email } = req.body;
+  userPool.signUp(
+    username,
+    password,
+    [{ Name: "email", Value: email }],
+    null,
+    (err, result) => {
+      if (err) {
+        return res
+          .status(400)
+          .json({ error: err.message || JSON.stringify(err) });
+      }
+      const cognitoUser = result.user;
+      return res.json({
+        message: `User ${cognitoUser.getUsername()} registered successfully`,
+      });
+    }
+  );
+});
+
 router.post("/login", async (req, res) => {
-  return new Promise((resolve, reject) => {
+  const responseData = await new Promise((resolve, reject) => {
     const { username, password } = req.body;
-    const userPool = new CognitoUserPool({
-      UserPoolId: USER_POOL_ID,
-      ClientId: USER_POOL_CLIENT_ID,
-    });
 
     const user = new CognitoUser({ Username: username, Pool: userPool });
     const authDetails = new AuthenticationDetails({
@@ -27,61 +48,26 @@ router.post("/login", async (req, res) => {
 
     user.authenticateUser(authDetails, {
       onSuccess: async (result) => {
-        const idToken = result.getIdToken().getJwtToken();
-        resolve(idToken);
+        const { idToken, refreshToken, accessToken, clockDrift } = result;
+
+        const responseData = {
+          idToken: idToken.jwtToken,
+          refreshToken: refreshToken.token,
+          accessToken: accessToken.jwtToken,
+          clockDrift,
+        };
+        // console.log("type getIdToken", typeof result.getIdToken);
+        // console.log("type getJwtToken", typeof result.getIdToken().getJwtToken);
+
+        resolve(responseData);
       },
-      onFailure: (err) => reject(err),
+      onFailure: (err) => {
+        reject(err);
+      },
     });
   });
-});
 
-router.post("/presign-upload", async (req, res, next) => {
-  const idToken = req.headers["x-id-token"];
-  const credentials = req.headers["x-iam-credentials"];
-  const { filename, type, size } = req.body;
-
-  try {
-    const s3Client = await getS3Client(username, password);
-
-    const uploadParams = {
-      Bucket: S3_BUCKET,
-      Key: file.originalname, // IAM policy prefixes it automatically with identity-id
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
-
-    await s3Client.send(new PutObjectCommand(uploadParams));
-    res.json({
-      message: "File uploaded successfully",
-      key: file.originalname,
-    });
-  } catch (err) {
-    return next(error);
-  }
-});
-
-// Download file
-router.get("/presign-download", async (req, res) => {
-  const { username, password } = req.query;
-  const { filename } = req.params;
-
-  try {
-    const s3Client = await getS3Client(username, password);
-
-    const downloadParams = {
-      Bucket: S3_BUCKET,
-      Key: filename,
-    };
-
-    const command = new GetObjectCommand(downloadParams);
-    const response = await s3Client.send(command);
-
-    res.setHeader("Content-Type", response.ContentType);
-    response.Body.pipe(res);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+  return res.status(200).json(responseData);
 });
 
 module.exports = router;
