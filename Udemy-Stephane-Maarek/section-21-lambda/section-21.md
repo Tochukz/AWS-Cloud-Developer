@@ -143,5 +143,33 @@ __Lambda Execution Role (IAM Role)__
 * When you use an event source mapping to invoke your function, Lambda uses the execution role to read event data.
 * Best practice: create one Lambda Execution Role per function
 
+#### Reserved and Provisioned Concurrency
+__How to request increase in you account reserved concurrency quotas__  
+1. Check the account's present reserved/unreserved  concurrency
+```bash
+# Use the service-quotas  command
+$ aws service-quotas get-service-quota --service-code lambda --quota-code L-B99A9384
+# Alternatively you can use lambda command
+$ aws lambda get-account-settings
+```
+2. Request a quota increase
+```bash
+# Request 1000 reserved concurrency
+$ aws service-quotas request-service-quota-increase \
+  --service-code lambda \
+  --quota-code L-B99A9384 \
+  --desired-value 1000
+```
+3. Alternatively, you ca request quota increase using Service Quotas console  
+* Go to the Service Quotas console
+* Enter "Lambda" and search and select "AWS Lambda"
+* On the Service Quotas table, select "Concurrent executions"
+* Click on the "Request increase at account level" button and a pop up should appear
+* Enter the value you want and click the _Request_ button.
+* The request will go into pending.
+4. Check back later to see if it has been approved.
+* You can check back on the Service Quotas console
+* Or you can check using one of the two commands in step 1.
+
 ### Resources
 [AWS managed policies for AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/security-iam-awsmanpol.html)  

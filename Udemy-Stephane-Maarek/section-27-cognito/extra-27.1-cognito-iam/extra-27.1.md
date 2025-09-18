@@ -85,7 +85,7 @@ $ aws s3 rm s3://simple-users-bucket/eu-west-2/<identity-id>/myfile.txt
 **Cleanup**  
 Emtpy the S3 bucket
 
-```
+```bash
 $ aws s3 rm s3://simple-users-bucket --recursive
 ```
 

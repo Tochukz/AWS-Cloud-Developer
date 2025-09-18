@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Create Lambda Function with Reserved Concurrency and another with Provisioned Concurrency
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  ReservedConcurrencyFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ReservedConcurrencyFunc
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return "Hello from Reserved Concurrency Lambda!"
+      Runtime: python3.9
+      ReservedConcurrentExecutions: 5 # Reserved concurrency is set per function
+
+  ProvisionedConcurrencyFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ProvisionedConcurrencyFunc
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return "Hello from Provisioned Concurrency Lambda!"
+      Runtime: python3.9
+
+  FunctionVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      Description: Function Version for ProvisionedConcurrencyFunc
+      FunctionName: !Ref ProvisionedConcurrencyFunc
+      # ProvisionedConcurrencyConfig: # Better to do it on the Alias level only.
+      #   ProvisionedConcurrentExecutions: 2 # Initial provisioned concurrency
+
+  FunctionAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      Name: Prod
+      Description: Production alias for ProvisionedConcurrencyFunc
+      FunctionName: !Ref ProvisionedConcurrencyFunc
+      FunctionVersion: !GetAtt FunctionVersion.Version
+      ProvisionedConcurrencyConfig: # Set provisioned concurrency is set per alias
+        ProvisionedConcurrentExecutions: 2
