@@ -204,7 +204,7 @@ __AWS X-Ray advantages__
 * Review request behavior
 * Find errors and exceptions
 * Are we meeting time SLA?
-* Where I am throttled?
+* Where am I throttled?
 * Identify users that are impacted
 
 __X-Ray compatibility__   

@@ -190,6 +190,15 @@ Hooks:
   - AfterAllowTraffic: "LambdaFunctionToValidateAfterAllowingProductionTraffic"
 ```
 
+
+__Code Deploy Blue Green Deployment__  
+A Blue/Green deployment is used to update your applications while minimizing interruptions caused by the changes of a new application version.  
+CodeDeploy provisions your new application version alongside the old version before rerouting your production traffic. The behavior of your deployment depends on which compute platform you use:
+
+1. __AWS Lambda__: Traffic is shifted from one _version_ of a Lambda function to a _new version_ of the same Lambda function.
+2. __Amazon ECS__: Traffic is shifted from a _task set_ in your Amazon ECS service to an updated, replacement task set in the same Amazon ECS service.
+3. __EC2/On-Premises__: Traffic is shifted from one _set of instances_ in the original environment to a replacement set of instances.
+
 ## AWS CodeArtifact
 __Introduction__  
 * Software packages depend on each other to be built (also called code dependencies), and new ones are created
