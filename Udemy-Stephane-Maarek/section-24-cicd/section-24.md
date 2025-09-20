@@ -190,6 +190,24 @@ Hooks:
   - AfterAllowTraffic: "LambdaFunctionToValidateAfterAllowingProductionTraffic"
 ```
 
+__For Lambda Deployments__    
+The `appspec.yml` for Lambda is used for _canary_ or _linear_ deployments of Lambda function versions. Its hooks are for running validation Lambda functions before and after traffic shifting.
+1. BeforeAllowTraffic
+  - Runs before before traffic shifting starts. Used for pre-shift checks on the new version
+2. AfterAllowTraffic
+  - Runs after traffic shifting is complete.
+
+The following code snippet shows a valid example of the structure of hooks for an _Lambda_ deployment:
+```yaml
+Hooks:
+  - BeforeAllowTraffic: "LambdaFunctionToValidateBeforeAllowingProductionTraffic"
+  - AfterAllowTraffic: "LambdaFunctionToValidateAfterAllowingProductionTraffic"
+```
+
+__AppSpec LifeCycle Hooks: EC2/On-Premise vs ECS vs Lambda__   
+See `sample-ec2-appspec.yml`, `sample-ecs-appspec.yml` and `sample-lambda-appspec.yml` for comparison between the different computes.    
+Notice that the _EC2 AppSpec Hooks_ are script-heavy and focuses on orchestrating commands on the deployment targets themselves.
+Mean while the _ECS and Lambda AppSpec Hooks_ are function-heavy. They don't run scripts on servers but instead triggers Lambda functions to manage their deployment process - e.g Blue Green deployment for ECS or Linear/Canary deployment for Lambda.   
 
 __Code Deploy Blue Green Deployment__  
 A Blue/Green deployment is used to update your applications while minimizing interruptions caused by the changes of a new application version.  

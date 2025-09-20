@@ -1,0 +1,15 @@
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "arn:aws:ecs:us-east-1:123456789012:task-definition/my-app:1"
+        LoadBalancerInfo:
+          ContainerName: "my-app-container"
+          ContainerPort: 80
+hooks:
+  - BeforeInstall: "ValidateDependenciesFunction"
+  - AfterInstall: "RunMigrationsFunction"
+  - AfterAllowTestTraffic: "IntegrationTestFunction"
+  - BeforeAllowTraffic: "FinalSanityCheckFunction"
+  - AfterAllowTraffic: "CleanupBlueFunction"

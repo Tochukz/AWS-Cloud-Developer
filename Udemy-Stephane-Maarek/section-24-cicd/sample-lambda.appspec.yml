@@ -1,0 +1,12 @@
+version: 0.0
+Resources:
+  - myLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: "my-function"
+        Alias: "prod"
+        CurrentVersion: "1"
+        TargetVersion: "2"
+hooks:
+  - BeforeAllowTraffic: "PreTrafficValidationFunction"
+  - AfterAllowTraffic: "PostTrafficValidationFunction"
