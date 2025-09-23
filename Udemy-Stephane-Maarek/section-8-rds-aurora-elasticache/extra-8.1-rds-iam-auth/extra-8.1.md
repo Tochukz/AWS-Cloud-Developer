@@ -3,7 +3,10 @@
 ### Description
 
 This configuration enabled IAM authentication on an RDS database instance.  
-This means that any instance that desired to connect to the RDS instance my have the proper IAM permission to be able to do so.
+This means that any compute that desired to connect to the RDS instance may have the proper IAM permission to be able to do so.
+
+Note that IAM Authentication is only supported on MySQL and PostgreSQL RDS instances.  
+It is also support for Aurora MySQL and Aurora PostgreSQL.
 
 ### Operation
 
@@ -34,8 +37,8 @@ $ aws cloudformation describe-stacks --stack-name RdsIamAuth --query "Stacks[0].
 
 ```bash
 # Make sure to update the .env file
-$ zip -r -q scripts.zip scripts/. -x "node_modules/*"
-$ scp -i dev-simple-key.pem scripts.zip ec2-user@13.40.8.220:~/
+$ zip -r -q scripts.zip scripts/.
+$ scp -i dev-simple-key.pem scripts.zip ec2-user@35.176.122.22:~/
 
 ```
 
@@ -44,7 +47,7 @@ $ scp -i dev-simple-key.pem scripts.zip ec2-user@13.40.8.220:~/
 1. SSH into the EC2 instance and unzip the script
 
 ```bash
-$ ssh -i dev-simple-key.pem ec2-user@13.40.8.220
+$ ssh -i dev-simple-key.pem ec2-user@35.176.122.224
 
 # Now inside the archive
 $ unzip scripts.zip

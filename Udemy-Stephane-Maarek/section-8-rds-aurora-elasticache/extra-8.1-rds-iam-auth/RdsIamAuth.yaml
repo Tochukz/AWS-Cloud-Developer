@@ -53,7 +53,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
-          SourceSecurityGroupId: !Ref Ec2SecurityGroup
+          # SourceSecurityGroupId: !Ref Ec2SecurityGroup
+          CidrIp: 0.0.0.0/0
 
   DbSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
@@ -65,7 +66,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     Properties:
       DBInstanceIdentifier: simpledb
-      DBName: company,
+      DBName: company
       Engine: mysql
       EngineVersion: 8.0.35
       DBInstanceClass: db.t3.micro
@@ -76,7 +77,7 @@ Resources:
       VPCSecurityGroups:
         - !GetAtt RdsSecurityGroup.GroupId
       EnableIAMDatabaseAuthentication: true
-      PubliclyAccessible: false
+      PubliclyAccessible: true
 
   Ec2InstanceRole:
     Type: AWS::IAM::Role
