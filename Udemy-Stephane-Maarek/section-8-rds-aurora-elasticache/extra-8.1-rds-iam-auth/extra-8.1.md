@@ -8,6 +8,8 @@ This means that any compute that desired to connect to the RDS instance may have
 Note that IAM Authentication is only supported on MySQL and PostgreSQL RDS instances.  
 It is also support for Aurora MySQL and Aurora PostgreSQL.
 
+<!--Not working yet -->
+
 ### Operation
 
 **Deployment**  
