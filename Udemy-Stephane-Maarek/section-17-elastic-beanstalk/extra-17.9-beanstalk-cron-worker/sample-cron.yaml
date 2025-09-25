@@ -1,0 +1,18 @@
+version: 1
+cron:
+  - name: daily-cleanup
+    url: "/tasks/cleanup"
+    schedule: "0 0 * * *"   # Every day at midnight UTC
+  - name: hourly-report
+    url: "/tasks/report"
+    schedule: "0 * * * *"   # Every hour
+  - name: every-5-minutes
+    url: "/tasks/check-status"
+    schedule: "*/5 * * * *" # Every 5 minutes
+  - name: weekly-summary
+    url: "/tasks/weekly-summary"
+    schedule: "0 0 * * 0"   # Every Sunday at midnight UTC
+
+
+# The EB worker will send an HTTP POST to the URL on the schedule.
+# Your app must implement the corresponding routes to handle the requests

@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Elastic Beanstalk environment with HTTP to HTTPS redirection
+
+Parameters:
+  AcmCertificateArn:
+    Type: String
+    Description: ARN of the ACM certificate for HTTPS
+  HostedZoneName:
+    Type: String
+    Description: The hosted zone name (e.g., example.com.)
+    Default: goodguys.click
+  Subdomain:
+    Type: String
+    Description: The subdomain for the application (e.g., app.example.com)
+    Default: beanapp.goodguys.click
+  DomainPrefix:
+    Type: String
+    Description: The prefix for the CNAME (e.g., 'app' for app.example.com)
+    Default: beanapp
+  SolutionStackName:
+    Type: String
+    Description: The Elastic Beanstalk solution stack name
+    Default: "64bit Amazon Linux 2023 v6.6.5 running Node.js 22"
+    # To view the  available list of solution stacks, run the llist-available-solution-stacks command:
+    # $ aws elasticbeanstalk list-available-solution-stacks
+
+Mappings:
+  HostedZoneByRegion:
+    eu-west-1:
+      AlbHostedZoneId: Z2NYPWQ7DFZAZH
+    eu-west-2:
+      AlbHostedZoneId: Z1GKAAAUGATPF1
+    eu-west-3:
+      AlbHostedZoneId: Z5WN6GAYWG5OB
+    # See https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html for more regions
+
+Resources:
+  Application:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: SimpleApplication
+      Description: Elastic Beanstalk Application with HTTPS redirect
+
+  SimpleEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      EnvironmentName: SimpleEnvironment
+      ApplicationName: !Ref Application
+      SolutionStackName: !Ref SolutionStackName
+      CNAMEPrefix: !Ref DomainPrefix
+      OptionSettings:
+        # Enable HTTPS listener on ALB
+        - Namespace: aws:elbv2:listener:443
+          OptionName: ListenerEnabled
+          Value: true
+        - Namespace: aws:elbv2:listener:443
+          OptionName: Protocol
+          Value: HTTPS
+        # Attach an ACM certificate ARN
+        - Namespace: aws:elbv2:listener:443
+          OptionName: SSLCertificateArns
+          Value: !Ref AcmCertificateArn # arn:aws:acm:us-east-1:123456789012:certificate/abcd1234-abcd-1234-abcd-1234abcd1234
+        # Enable HTTP listener
+        - Namespace: aws:elbv2:listener:80
+          OptionName: ListenerEnabled
+          Value: true
+        - Namespace: aws:elbv2:listener:80
+          OptionName: Protocol
+          Value: HTTP
+        # Redirect HTTP → HTTPS
+        - Namespace: aws:elbv2:listener:80
+          OptionName: Rules
+          Value: '[{"priority":1,"action":"redirect","pathPattern":"/*","redirectConfig":{"protocol":"HTTPS","port":"443","statusCode":"HTTP_301"}}]'
+
+  AliasRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub "${HostedZoneName}."
+      Name: !Sub "${Subdomain}."
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt SimpleEnvironment.EndpointURL
+        HostedZoneId:
+          !FindInMap [HostedZoneByRegion, !Ref AWS::Region, AlbHostedZoneId]

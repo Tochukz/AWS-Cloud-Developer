@@ -1,0 +1,6 @@
+[
+  {
+    "ParameterKey": "AcmCertificateArn",
+    "ParameterValue": "arn:aws:acm:eu-west-2:<account-id>:certificate/xxxx-xxxxx-xxxxx-xxxxxx"
+  }
+]
