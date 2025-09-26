@@ -51,3 +51,13 @@ Section | Pg  | Title
 29      | 818 | Advanced Identity in AWS
 30      | 840 | AWS Security & Encryption
 31      | 885 | Other AWS Services
+
+### Hands On
+__Section 4: IAM and AWS CLI__  
+13. IAM User and Group
+15. IAM Policy
+17. Enforcing MFA
+27. IAM Security Tools
+Extra 4.1 - IAM Policy Variable
+Extra 4.2 - Time-based Policy
+Extra 4.3 - Decoding Authorization Message

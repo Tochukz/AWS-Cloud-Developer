@@ -1,0 +1,30 @@
+### Description
+
+Envelope encryption uses a data key (fast symmetric key) to encrypt your data locally,
+and uses an AWS KMS _Customer Master Key (CMK)_ to encrypt (wrap) that data key.  
+You store the encrypted data key alongside the ciphertext.
+To read, you ask KMS to decrypt the encrypted data key, then use the returned plaintext data key to decrypt the data.
+
+Why do this?
+
+- Symmetric crypto (AES) is fast for large payloads.
+- KMS protects the small secret (data key) and centralizes key policy / auditing.
+- Limits number of requests to KMS (you only call KMS to generate/decrypt the data key, not to encrypt every object).
+
+#### High-level flow
+
+**Encryption**
+
+1. Call GenerateDataKey on KMS with KeyId and KeySpec=AES_256.
+2. KMS returns:
+
+   - Plaintext — the raw data key (never store this long-term).
+   - CiphertextBlob — the data key encrypted under the CMK.
+
+3. Use Plaintext as your AES-256-GCM key to encrypt your payload locally (generate random IV).
+
+4. Store:
+   - The ciphertext (and GCM auth tag),
+   - The CiphertextBlob (encrypted data key),
+   - The IV (nonce) and any metadata you need.
+

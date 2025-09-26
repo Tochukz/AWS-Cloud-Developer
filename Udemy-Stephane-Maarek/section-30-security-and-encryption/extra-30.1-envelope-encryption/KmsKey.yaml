@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creates KMS Key
+
+Resources:
+  SimpleKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "KMS Key for Envelope Encryption"
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource: "*"
+      Enabled: true
+      EnableKeyRotation: true
+
+Outputs:
+  KeyId:
+    Description: "KMS Key Id"
+    Value: !Ref SimpleKey
+  KeyArn:
+    Description: "KMS Key Arn"
+    Value: !GetAtt SimpleKey.Arn
