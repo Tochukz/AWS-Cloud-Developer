@@ -54,10 +54,30 @@ Section | Pg  | Title
 
 ### Hands On
 __Section 4: IAM and AWS CLI__  
-13. IAM User and Group
-15. IAM Policy
-17. Enforcing MFA
-27. IAM Security Tools
-Extra 4.1 - IAM Policy Variable
-Extra 4.2 - Time-based Policy
-Extra 4.3 - Decoding Authorization Message
+13 - IAM User and Group
+15 - IAM Policy
+17 - Enforcing MFA
+27 - IAM Security Tools
+Extra 4.1 - IAM Policy Variable  
+Extra 4.2 - Time-based Policy  
+Extra 4.3 - Decoding Authorization Message  
+
+__Section 5: EC2 Fundamental__   
+31 - Budget
+Extra 5.1 - EC2 CloudWatch Logs  
+Extra 5.2 - Cross Regional EC2 KeyPair  
+
+__Section 6: EC2 Instance Storage__  
+47 - EBS
+56 - EFS
+
+__Section 7: AWS Fundamentals: ELB + ASG__  
+Extra 7.1 - ALB Access Logs
+
+__Section 8: RDS, Aurora, & ElastiCache__  
+Extra 8.1 - RDS IAM Authentication  
+Extra 8.2 - RDS Proxy  
+Extra 8.3 - Aurora Auto Scaling  
+Extra 8.4 - Aurora BinLog Replication  
+
+__Section 12: AWS CLI, SDK, IAM Roles & Policies__  

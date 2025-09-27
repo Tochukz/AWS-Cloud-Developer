@@ -43,7 +43,7 @@ $ aws cloudformation deploy --template-file ReservedVsProvisioned.yaml  --stack-
 **Testing**
 
 Go to the Lambda Console to inspect both Lambda functions.  
-Lambda Console > Functions > Select the functiionon > Configuration tab > _Concurrency and recursion detection_
+Lambda Console > Functions > Select the function > Configuration tab > _Concurrency and recursion detection_
 User the _Concurrency_ section, you can see the reserved concurrency set for the function.  
 Under the _Provisioned concurrency configurations_ section, you will see a table with the alias and associated provisioned concurrency.
 

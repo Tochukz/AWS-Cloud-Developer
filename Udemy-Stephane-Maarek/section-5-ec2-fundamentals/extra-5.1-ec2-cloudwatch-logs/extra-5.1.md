@@ -4,6 +4,8 @@
 
 In this example we integrate a CloudWatch LogGroup to an EC2 instance so that Logs from the EC2 instance are sent to the CloudWatch LogGroup.   
 
+<!--Collecting EC2 log files and centrallizing them in CloudWatch Logs using the CloudWatch log agent.
+-->
 ### Operation
 
 **Deployment**  

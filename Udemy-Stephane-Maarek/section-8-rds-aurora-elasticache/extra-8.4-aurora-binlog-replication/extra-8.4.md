@@ -4,8 +4,8 @@
 
 Setting up Aurora MySQL _binlog replication_ across regions is a common pattern when you need cross-region disaster recovery or read scaling with external MySQL systems.   
 
-In this example, we setup Aurora MySQL primary Cluster in one region and a second Aurora MySQL cluster in another region.
-We configure _binlog replication_ from the primary instance to the main cluster to the instance in the second cluster.  
+In this example, we setup Aurora MySQL primary Cluster in one region and a secondary Aurora MySQL cluster in another region.
+We configure _binlog replication_ from the primary instance in the main cluster to the instance in the secondary cluster.  
 
 Here we have two template and two stacks in different regions.
 
@@ -54,3 +54,13 @@ $ aws cloudformation delete-stack --stack-name AuroraBinlogReplica
 ```
 
 ### Learn More
+__BinLog Replication__  
+BinLog Replication in Aurora refers to binary log replication, where Aurora MySQL publishes MySQL-compatible binary logs (binlogs) that can be used for replication to external MySQL databases or other Aurora clusters.
+* In MySQL, binlogs record every change to the database (INSERT, UPDATE, DELETE, DDL, etc.).
+* Aurora can be configured to write and export binlogs, so external MySQL instances (on Amazon RDS MySQL, EC2, or on-premises) can use them for replication.
+
+__Why is it useful?__  
+* __Hybrid architectures__ → keep an on-premises MySQL database in sync with Aurora.
+* __Migration / DR__ → migrate from Aurora to MySQL or maintain a standby outside Aurora.
+* __Analytics / Reporting__ → replicate changes into another system for analysis.
+* __Cross-region replication__ (if you don’t want to use Aurora Global Database).

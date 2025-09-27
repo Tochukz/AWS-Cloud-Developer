@@ -20,3 +20,11 @@ __AWS Lambda Limits to Know - per region__
   - Synchronous invocation Response - max size 6 MB
   - Asynchronous invocation Request - max size 256 KB
   - Asynchronous invocation  Response - No direct response
+
+
+__Key facts about Lambda container images__  
+* Lambda supports container images up to 10 GB (not 15 GB).
+* Images must be based on Linux, not Windows.
+* Images must implement the Lambda Runtime API (or use AWS-provided base images that already do).
+* You can test locally with the _Lambda Runtime Interface Emulator (RIE)_, which implements the Runtime API.
+* Lambda does not support _multi-architecture_ images — you must target _linux/amd64_.  
