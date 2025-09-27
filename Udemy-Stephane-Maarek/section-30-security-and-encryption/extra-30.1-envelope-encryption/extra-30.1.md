@@ -103,3 +103,15 @@ The direct 'Encrypt' API of KMS has an upper limit of 4 KB for the data payload.
 2. Call KMS Decrypt with the CiphertextBlob — KMS returns the Plaintext data key.
 3. Use returned plaintext to decrypt the ciphertext locally.
 4. Zero-out plaintext key memory after use.
+
+**Important security notes and best practices**
+
+- Never persist the plaintext data key. Only persist the CiphertextBlob returned by KMS.
+- Zero memory that held plaintext keys as soon as possible (shown above).
+- Use AES-GCM (authenticated encryption) and store auth tag. Consider AAD (e.g., object id, region) to bind metadata.
+- Use KMS key policies / IAM so only services that need to decrypt can call KMS:Decrypt.
+- Use EncryptionContext with KMS if you need extra binding on KMS decrypt (and provide the same context on decrypt).
+- Rotate CMKs periodically. Data keys can remain valid; when rotating CMKs you still can decrypt previously encrypted data via KMS (if policy allows). Consider re-encrypting data if needed.
+- Prefer the AWS Encryption SDK for more heavyweight needs — it implements envelope encryption best practices for you (multi-master keys, keyrings, framing, etc.).
+- Audit KMS usage in CloudTrail (Decrypt/GenerateDataKey calls are logged).
+- Limit KMS calls if doing many small encrypts — using data keys reduces calls (only generate or decrypt per object, not per block); design caching judiciously (but be careful with long-lived plaintext keys).

@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Import an existing SSH public key into EC2 KeyPairs
+
+Parameters:
+  KeyName:
+    Type: String
+    Default: SharedKey
+    Description: The name for the EC2 Key Pair
+  PublicKeyMaterial:
+    Type: String
+    Description: The contents of your .pub file (e.g. ssh-rsa AAAA...)
+
+Resources:
+  ImportedKeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: !Ref KeyName
+      PublicKeyMaterial: !Ref PublicKeyMaterial
+      # To import an existing key pair, include the PublicKeyMaterial property.
+      # To create a new key pair, omit the PublicKeyMaterial property.
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SimpleSecurityGroup
+      GroupDescription: Security Group for Simple EC2 Instance
+      SecurityGroupIngress:
+        - Description: Allow SSH access from anywhere
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit for eu-west-2
+      InstanceType: t2.micro
+      KeyName: !Ref ImportedKeyPair
+      SecurityGroupIds:
+        - !GetAtt SecurityGroup.GroupId
+      Tags:
+        - Key: Name
+          Value: SimpleEc2Instance
+
+Outputs:
+  PublicIp:
+    Description: EC2 Instance Public IP
+    Value: !GetAtt Ec2Instance.PublicIp
+  InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref Ec2Instance
