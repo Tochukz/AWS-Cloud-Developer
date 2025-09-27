@@ -1,0 +1,4 @@
+{
+  "Department": { "DataType": "String", "StringValue": "Packaging" },
+  "Priority": { "DataType": "String", "StringValue": "High" }
+}

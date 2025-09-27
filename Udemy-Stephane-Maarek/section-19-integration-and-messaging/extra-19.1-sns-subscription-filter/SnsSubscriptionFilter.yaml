@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: SNS Topic with subscription and filter policy
+
+Parameters:
+  SalesSubscriptionEmail:
+    Type: String
+    Description: Email to be used for Sales subscription
+  OrderSubscriptionEmail:
+    Type: String
+    Description: Email to be used for Order subscription
+
+Resources:
+  SimpleTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: simple-topic
+
+  SalesSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: !Ref SalesSubscriptionEmail
+      TopicArn: !Ref SimpleTopic
+      FilterPolicyScope: MessageAttributes # MessageAttributes | MessageBody
+      FilterPolicy:
+        Department:
+          - Sales
+          - Marketing
+        Priority:
+          - High
+
+  OrderSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: !Ref OrderSubscriptionEmail
+      TopicArn: !Ref SimpleTopic
+      FilterPolicyScope: MessageAttributes # MessageAttributes | MessageBody
+      FilterPolicy:
+        Department:
+          - Order
+          - Packaging
+        Priority:
+          - High
+
+Outputs:
+  TopicArn:
+    Description: ARN of SNS Topic
+    Value: !Ref SimpleTopic

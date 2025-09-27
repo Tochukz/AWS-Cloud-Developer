@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "SalesSubscriptionEmail",
+    "ParameterValue": "sales@company.com"
+  },
+  {
+    "ParameterKey": "OrderSubscriptionEmail",
+    "ParameterValue": "order@company.com"
+  }
+]
