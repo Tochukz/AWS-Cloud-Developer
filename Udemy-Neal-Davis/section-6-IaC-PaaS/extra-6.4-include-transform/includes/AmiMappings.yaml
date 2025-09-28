@@ -1,0 +1,8 @@
+Mappings:
+  Images: # Amazon Linux 2023 AMI 64-bit (x86), uefi-preferred
+    eu-west-1:
+      Ami: ami-0720a3ca2735bf2fa
+    eu-west-2:
+      Ami: ami-04ba8620fc44e2264
+    eu-west-3:
+      Ami: ami-0960d166ab83fd695

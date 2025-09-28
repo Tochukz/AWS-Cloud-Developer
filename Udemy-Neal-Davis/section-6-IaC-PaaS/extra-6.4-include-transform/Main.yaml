@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Transform: AWS::Include
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC Id of existing VPC
+  TemplateBucketName:
+    Type: String
+    Description: Bucket name for the template snippets
+    Default: chucks-workspace-storage
+
+Resources:
+  Network:
+    Fn::Transform:
+      Name: AWS::Include
+      Parameters:
+        Location: !Sub s3://${TemplateBucketName}/includes/Network.yaml
+        SecurityGroupName: WebSecurityGroup
+        Network_VpcId: !Ref VpcId
+
+  Storage:
+    Fn::Transform:
+      Name: AWS::Include
+      Parameters:
+        Location: !Sub s3://${TemplateBucketName}/includes/Storage.yaml
+        StorageBucketName: simple-bucket-05-06
+
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-04ba8620fc44e2264 # Amazon Linux 2023 AMI 64-bit  for eu-west-2
+      UserData: !Base64 |
+        #!/bin/bash
+        yum update -y
+        yum install -y httpd
+        systemctl start httpd
+        systemctl enable httpd
+
+Outputs:
+  PublicIp:
+    Description: Public IP of EC2 instance
+    Value: !GetAtt Ec2Instance.PublicIp
+  SecurityGroupId:
+    Description: ID of security group
+    Value: !GetAtt Network.Outputs.WebSecurityGroupId
+  BucketArn:
+    DEscription: ARN of the bucket
+    Value: !GetAtt Storage.Outputs.StorageBucketArn

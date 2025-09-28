@@ -1,0 +1,15 @@
+Parameters:
+  StorageBucketName:
+    Type: String
+    Description: Bucket name for the main storage bucket
+
+Resources:
+  StorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref StorageBucketName
+
+Outputs:
+  StorageBucketArn:
+    Description: ARN of the storage bucket
+    Value: !GetAtt StorageBucket.Arn

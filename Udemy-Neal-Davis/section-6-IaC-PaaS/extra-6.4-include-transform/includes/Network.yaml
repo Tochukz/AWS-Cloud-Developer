@@ -1,0 +1,12 @@
+WebSecurityGroup:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupName: !Ref NetworkSecurityGroupName
+    GroupDescription: Security group for Web EC2
+    VpcId: !Ref NetworkVpcId
+    SecurityGroupIngress:
+      - Description: Allow HTTP access
+        IpProtocol: TCP
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
