@@ -15,5 +15,9 @@
 * The wait time can be between 1 sec to 20 sec
 (20 sec preferable)
 
+### SQS Limits
+* Maximum size of SQS Message is 256KB
+* Maximum count of messages - Unlimited
+
 __Question:__ What is the maximum number of messages that can be stored in an SQS queue?
 __Answer:__ no limit
