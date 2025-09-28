@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Configure Bucket with Bucket Onwer as Default Object Owner
+
+Parameters:
+  CrossAccountId:
+    Type: String
+    Description: AWS Account ID of the cross account
+
+Resources:
+  DefaultBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: default-bucket-28
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        # RestrictPublicBuckets: true
+        # BlockPublicPolicy: false
+
+  DefaultBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DefaultBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowFullObjectAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${CrossAccountId}:root
+            Action: "s3:*"
+            Resource:
+              - !Sub ${DefaultBucket.Arn}/*
+
+  OwnershipBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ownership-bucket-28
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced # ObjectWriter | BucketOwnerPreferred | BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+      # BlockPublicPolicy: false
+      # RestrictPublicBuckets: true
+
+  OwnershipBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref OwnershipBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowFullObjectAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${CrossAccountId}:root
+            Action: "s3:*"
+            Resource:
+              - !Sub ${OwnershipBucket.Arn}/*
