@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: CloudWatch LogGroup sends Logs to Kinesis FireHose and from FireHose to S3 Bucket. CloudWatch Logs → Kinesis Firehose → S3
+
+Parameters:
+  LogGroupName:
+    Type: String
+    Description: Name of existing LogGroup
+
+Resources:
+  LogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: simple-logs-bucket-0210
+
+  FirehoseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: FirehoseToS3
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                Resource: !Sub "${LogsBucket.Arn}/*"
+
+  FirehoseDelivery:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamType: DirectPut
+      S3DestinationConfiguration:
+        BucketARN: !GetAtt LogsBucket.Arn
+        RoleARN: !GetAtt FirehoseRole.Arn
+
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: logs.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchLogsToFireHose
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
+                Resource: !GetAtt FirehoseDelivery.Arn
+
+  LogGroupSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName: !Ref LogGroupName
+      FilterPattern: "" # empty = capture all logs
+      DestinationArn: !GetAtt FirehoseDelivery.Arn
+      RoleArn: !GetAtt CloudWatchRole.Arn
