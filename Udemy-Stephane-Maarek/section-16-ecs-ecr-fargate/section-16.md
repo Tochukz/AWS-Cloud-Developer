@@ -172,9 +172,22 @@ __Amazon EKS – Data Volumes__
 * Need to specify `StorageClass` manifest on your EKS cluster
 * Leverages a _Container Storage Interface (CSI)_ compliant driver
 
-
 * Support for:
   - Amazon EBS
   - Amazon EFS (works with Fargate)
   - Amazon FSx for Lustre
   - Amazon FSx for NetApp ONTAP
+
+
+__Amazon ECS container agent configuration (EC2 launch time only)__  
+The Amazon ECS container agent supports a number of configuration options, most of which you set through environment variables.  
+If your container instance was launched with a Linux variant of the Amazon ECS-optimized AMI, you can set these environment variables in the `/etc/ecs/ecs.config` file and then restart the agent. You can also write these configuration variables to your container instances with Amazon EC2 user data at launch time.
+If your container instance was launched with a Windows variant of the Amazon ECS-optimized AMI, you can set these environment variables with the PowerShell `SetEnvironmentVariable` command and then restart the agent.  
+Here's a comprehensive list of ECS-related environment variables, categorized by their function:
+
+Variable               | Description
+-----------------------|---------------
+`ECS_CLUSTER`          | Specifies the ECS cluster that the container instance should register wit
+`ECS_ENGINE_AUTH_DATA` | Contains Docker authentication data in JSON format for private registries.
+`ECS_ENGINE_AUTH_TYPE` | Specifies the type of authentication data in ECS_ENGINE_AUTH_DATA
+`ECS_ENABLE_TASK_IAM_ROLE` |  Enables IAM roles for ECS tasks
