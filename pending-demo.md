@@ -60,8 +60,12 @@ __Section 18__
 __Section 20__  
 1. Extra-20.1 - Multi-account Event Aggregation
 
+__Section 22__
+1. Extra-22.1 - Dynamodb Cross Access
+
 __Section 23__
 1. Extra-23.1 - Websocket API Gateway
+
 __Section 21__  
 1. Extra-21.1 - Container in Lambda
 2. Extra-21.3 - Auto Scaling Lambda
