@@ -258,7 +258,7 @@ __X-Ray Instrumentation in your code__
 * __Instrumentation__ means the measure of product’s performance, diagnose errors, and to write trace information.
 * To instrument your application code, you use the __X-Ray SDK__
 * Many SDK require only configuration changes
-* You can modify your application code to customize and add annotation to the data that the SDK sends to X-Ray, using _interceptors_, _filters_, _handlers_, _middleware_…
+* You can modify your application code to customize and add annotation to the data that the SDK sends to X-Ray, using _interceptors_, _filters_, _handlers_ and _middleware_
 
 ```javascript
 // Example for Node.js and Express

@@ -1,6 +1,6 @@
 ### DynamoDB
 __DynamoDB - Basics__   
-* Maximum size of an item is 400KB
+* Maximum size of an item is _400KB_
 
 __DynamoDB – Write Capacity Units (WCU)__  
 * One Write Capacity Unit (WCU) represents one write per second for an
