@@ -1,6 +1,7 @@
 ### DynamoDB
 __DynamoDB - Basics__   
 * Maximum size of an item is _400KB_
+* Local Secondary Index are limited to _5 per table_ 
 
 __DynamoDB – Write Capacity Units (WCU)__  
 * One Write Capacity Unit (WCU) represents one write per second for an

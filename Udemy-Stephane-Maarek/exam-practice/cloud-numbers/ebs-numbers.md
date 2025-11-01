@@ -6,6 +6,7 @@ So, for a _200 GiB_ volume size, max IOPS possible is 200*50 = 10,000 IOPS.
 * Remember that Max Volume size if _16TiB_
 * And max IOPS is _64,000 IOPS_
 * Min Volume size is 4GiB
+* Amazon EBS delivers about _90 percent_ of the provisioned IOPS performance 99.9 percent of the time over a given year.
 
 __Amazon EBS General Purpose SSD (gp2/gp3)__   
 * __gp3__: Baseline 3,000 IOPS and 125 MB/s throughput, cheaper than gp2 if you don’t need more than that.
