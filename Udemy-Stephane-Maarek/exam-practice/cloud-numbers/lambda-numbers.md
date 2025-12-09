@@ -22,6 +22,18 @@ __AWS Lambda Limits to Know - per region__
   - Asynchronous invocation  Response - No direct response
 
 
+__Lambda – Limits to know__    
+* __RAM__ – 128 MB to 10,240 MB (10 GB)
+* __CPU__ – is linked to RAM (cannot be set manually)
+  - 2 vCPUs are allocated at 1,769 MB of RAM
+  - 6 vCPUs are allocated at 10,240 MB of RAM
+* __Timeout__ – up to 15 minutes
+* __/tmp Storage__ – 10,240 MB
+* __Deployment Package__ – 50 MB (zipped), 250 MB (unzipped) including layers
+* __Concurrent Executions__ – 1000 (soft limit that can be increased)
+* __Container Image Size__ – 10 GB
+* __Invocation Payload (request/response)__ – 6 MB (sync), 256 KB (async)
+
 __Key facts about Lambda container images__  
 * Lambda supports container images up to 10 GB (not 15 GB).
 * Images must be based on Linux, not Windows.
